@@ -1,0 +1,315 @@
+---
+title: "Exploratory Analysis for Georeferencing Project"
+output:
+  html_document:
+    code_folding: hide
+    df_print: kable
+---
+```{r message = FALSE}
+# Load core libraries; install these packages if you have not already
+library(ridigbio)
+library(rgbif)
+library(tidyverse)
+
+# Load library for making nice HTML output
+library(kableExtra)
+```
+
+### Big picture
+
+```{r}
+# Get count of mammal specimen records on iDigBio
+mammalia_idb <- idig_count_records(rq = list(class = "mammalia"))
+
+# Get count of mammal specimen records on GBIF
+mammalia_gbif <- occ_count(taxonKey = 359,
+                           basisOfRecord = "PRESERVED_SPECIMEN")
+
+# Get count of mammal specimen records that are georeferenced on iDigBio
+mammalia_georef_idb <- idig_count_records(rq = list(class = "mammalia",
+                                                    geopoint = list(
+                                                      type = "exists")))
+
+# Get count of mammal specimen records that are georeferenced on GBIF
+mammalia_georef_gbif <- occ_count(taxonKey = 359,
+                                  basisOfRecord = "PRESERVED_SPECIMEN",
+                                  georeferenced = TRUE)
+
+# Get count of mammal specimens that are not georeferenced but do have values
+# in the locality field on iDigBio
+mammalia_locality_idb <- idig_count_records(rq = list(class = "mammalia",
+                                                      geopoint = list(
+                                                        type = "missing"),
+                                                      locality = list(
+                                                        type = "exists")))
+
+# TBD: Get count of mammal specimens that are not georeferenced but do have values
+# in the locality field on GBIF
+mammalia_locality_gbif <- "TBD"
+```
+
+_**How many specimen records for Mammalia exist on iDigBio and GBIF?**_
+
+- **iDigBio** = `r format(mammalia_idb, big.mark = ",")`
+- **GBIF** = `r format(mammalia_gbif, big.mark = ",")`
+
+_**How many of these specimen records are georeferenced already?**_
+
+- **iDigBio** = `r format(mammalia_georef_idb, big.mark = ",")` (`r round(sum(mammalia_georef_idb/mammalia_idb*100), 1)`%)
+- **GBIF** = `r format(mammalia_georef_gbif, big.mark = ",")` (`r round(sum(mammalia_georef_gbif/mammalia_gbif*100), 1)`%)
+
+_**Of those specimen records that are not already georeferenced, how many have something in the locality field?**_
+
+- **iDigBio** = `r format(mammalia_locality_idb, big.mark = ",")` (`r round(sum(mammalia_locality_idb/(mammalia_idb-mammalia_georef_idb)*100), 1)`%)
+- **GBIF** = `r mammalia_locality_gbif`
+
+### Scoped by taxonomic family of interest
+
+**Primary taxonomic scope**: Rhinolophidae, Hipposideridae
+
+**Secondary taxonomic scope**: Megadermatidae, Rhinopomatidae, Craseonycteridae
+
+**Tertiary taxonomic scope**: Pteropodidae
+
+**Broadest taxonomic scope**: TBD civet and pangolins (Pholidota) taxa
+
+For each family, we want to know:
+
+1. How many specimen records exist on iDigBio and on GBIF?
+1. How many of these records are already georeferenced?
+1. Of those records that are not already georeferenced, how many have something in the locality field?
+1. How many distinct collections are providing these specimen records?
+    - Who are the top five data providers based on total number of records?
+    - What percentage of records are contributed by these top five?
+    - Who are the top five data providers based on number of records needing to be georeferenced?
+    - What percentage of records needing to be georeferenced are contributed by these top five?
+1. Where are these recordsets being mobilized from? (e.g. the VertNet IPT)
+1. What is the geographic scope represented in these records, measured by country of collection?
+    - All records
+    - Records in need of georeferencing
+1. What is the temporal scope represented in these records, measured by year of collection?
+    - All records
+    - Records in need of georeferencing
+1. What is the taxonomic scope represented in these records, measured by distinct species?
+    - All records
+    - Records in need of georeferencing
+1. What kind of ancillary locality information is represented in these records, measured by presence of values in the habitat field?
+    - All records
+    - Records in need of georeferencing
+1. What kind of ancillary locality information is represented in these records, measured by presence of values in the preparations and associatedSequences fields?
+    - All records
+    - Records in need of georeferencing
+
+```{r}
+queryByFamily <- function(family) {
+  
+  # Find GBIF taxonKey for given family
+  taxonKey <- name_backbone(name = family,
+                            rank = "family",
+                            class = "mammalia")
+  
+  # Rename taxonKey dataframe with the input family value and make it available
+  # in the global environment
+  assign(paste("taxonKey", family, sep = "_"), taxonKey, envir = globalenv())
+  
+  # Get count of specimen records on iDigBio
+  idb <- idig_count_records(rq = list(family = family))
+  
+  # Get count of specimen records that are georeferenced on iDigBio
+  georef_idb <- idig_count_records(rq = list(family = family,
+                                             geopoint = list(
+                                               type = "exists")))
+  
+  # Get count of specimens that are not georeferenced but do have values
+  # in the locality field on iDigBio
+  locality_idb <- idig_count_records(rq = list(family = family,
+                                               geopoint = list(
+                                                 type = "missing"),
+                                               locality = list(
+                                                 type = "exists")))
+  
+  # Get count of specimen records on GBIF
+  gbif <- occ_count(taxonKey = taxonKey$usageKey[1],
+                    basisOfRecord = "PRESERVED_SPECIMEN")
+  
+  # Get count of specimen records that are georeferenced on GBIF
+  georef_gbif <- occ_count(taxonKey = taxonKey$usageKey[1],
+                           basisOfRecord = "PRESERVED_SPECIMEN",
+                           georeferenced = TRUE)
+  
+  # Get count of specimens that are not georeferenced but do have values
+  # in the locality field on GBIF
+  locality_gbif <- "TBD"
+  
+  # Create table to present variables above
+  summary <- tribble(
+    ~source,
+    ~totalCount,
+    ~georefCount,
+    ~georefPercent, 
+    ~notGeorefCount,
+    ~notGeorefPercent,
+    ~couldGeorefCount,
+    ~couldGeorefPercent,
+    "iDigBio",
+    idb,
+    georef_idb,
+    paste(round(sum(georef_idb/idb*100), 1), "%", sep = ""),
+    sum(idb-georef_idb),
+    paste(round(sum((idb-georef_idb)/idb*100), 1), "%", sep = ""),
+    locality_idb,
+    paste(round(sum(locality_idb/(idb-georef_idb)*100), 1), "%", sep = ""),
+    "GBIF",
+    gbif,
+    georef_gbif,
+    paste(round(sum(georef_gbif/gbif*100), 1), "%", sep = ""),
+    sum(gbif-georef_gbif),
+    paste(round(sum((gbif-georef_gbif)/gbif*100), 1), "%", sep = ""),
+    locality_gbif,
+    "TBD")
+    
+  # Rename records dataframe with the input family value and make it available
+  # in the global environment
+  assign(paste("summary", family, sep = "_"), summary, envir = globalenv())
+  
+  # Pull in specimen records from iDigBio that are not georeferenced but that do
+  # have values in the locality field
+  records_idb <- idig_search_records(rq = list(family = family,
+                                               geopoint = list(
+                                                 type = "missing"),
+                                               locality = list(
+                                                 type = "exists")),
+                                     fields = c("uuid",
+                                                "recordset",
+                                                "institutioncode",
+                                                "collectioncode",
+                                                "catalognumber",
+                                                "scientificname",
+                                                "eventdate",
+                                                "country",
+                                                "stateprovince",
+                                                "county",
+                                                "municipality",
+                                                "data.dwc:locality",
+                                                "data.dwc:habitat",
+                                                "data.dwc:preparations",
+                                                "data.dwc:associatedSequences"))
+  
+  # Create column in records_idb to match duplicate records with GBIF data
+  records_idb <- records_idb %>% 
+    unite(matchDuplicates, 
+          c("institutioncode", "collectioncode", "catalognumber"), 
+          sep = " ", 
+          remove = FALSE) %>% 
+    mutate(matchDuplicates = tolower(matchDuplicates))
+  
+  # Pull in specimen records from GBIF that are not georeferenced
+  records_gbif <- occ_search(taxonKey = taxonKey$usageKey[1],
+                             basisOfRecord = "PRESERVED_SPECIMEN",
+                             hasCoordinate = FALSE,
+                             fields = c("key",
+                                        "datasetKey",
+                                        "institutionCode",
+                                        "collectionCode",
+                                        "catalogNumber",
+                                        "acceptedScientificName",
+                                        "year",
+                                        "country",
+                                        "stateProvince",
+                                        "county",
+                                        "municipality",
+                                        "locality",
+                                        "habitat",
+                                        "preparations",
+                                        "associatedSequences"))
+  
+  # Extract dataframe from records_gbif list
+  records_gbif <- records_gbif$data
+  
+  # Subset records_gbif to include only those records with locality values,
+  # and create column to match duplicate records with iDigBio data
+  records_gbif <- records_gbif %>% 
+    filter(!is.na(locality)) %>% 
+    unite(matchDuplicates, 
+          c("institutionCode", "collectionCode", "catalogNumber"), 
+          sep = " ", 
+          remove = FALSE) %>% 
+    mutate(matchDuplicates = tolower(matchDuplicates))
+  
+  # Join records_idb and records_gbif
+  records <- records_idb %>% 
+    full_join(records_gbif, by = "matchDuplicates")
+  
+  # Rename records dataframe with the input family value and make it available
+  # in the global environment
+  assign(paste("records", family, sep = "_"), records, envir = globalenv())
+  
+}
+
+queryByFamily("Rhinolophidae")
+queryByFamily("Hipposideridae")
+queryByFamily("Megadermatidae")
+queryByFamily("Rhinopomatidae")
+queryByFamily("Craseonycteridae")
+queryByFamily("Pteropodidae")
+```
+
+#### RHINOLOPHIDAE
+
+_**Summary of data on iDigBio and GBIF**_
+
+```{r echo = FALSE, results = 'asis'}
+knitr::kable(summary_Rhinolophidae) %>% 
+    kable_styling(bootstrap_options = 
+                         c("striped", "hover", "condensed", "responsive"))
+```
+
+#### HIPPOSIDERIDAE
+
+_**Summary of data on iDigBio and GBIF**_
+
+```{r echo = FALSE, results = 'asis'}
+knitr::kable(summary_Hipposideridae) %>% 
+    kable_styling(bootstrap_options = 
+                         c("striped", "hover", "condensed", "responsive"))
+```
+
+#### MEGADERMATIDAE
+
+_**Summary of data on iDigBio and GBIF**_
+
+```{r echo = FALSE, results = 'asis'}
+knitr::kable(summary_Megadermatidae) %>% 
+    kable_styling(bootstrap_options = 
+                         c("striped", "hover", "condensed", "responsive"))
+```
+
+#### RHINOPOMATIDAE
+
+_**Summary of data on iDigBio and GBIF**_
+
+```{r echo = FALSE, results = 'asis'}
+knitr::kable(summary_Rhinopomatidae) %>% 
+    kable_styling(bootstrap_options = 
+                         c("striped", "hover", "condensed", "responsive"))
+```
+
+#### CRASEONYCTERIDAE
+
+_**Summary of data on iDigBio and GBIF**_
+
+```{r echo = FALSE, results = 'asis'}
+knitr::kable(summary_Craseonycteridae) %>% 
+    kable_styling(bootstrap_options = 
+                         c("striped", "hover", "condensed", "responsive"))
+```
+
+#### PTEROPODIDAE
+
+_**Summary of data on iDigBio and GBIF**_
+
+```{r echo = FALSE, results = 'asis'}
+knitr::kable(summary_Pteropodidae) %>% 
+    kable_styling(bootstrap_options = 
+                         c("striped", "hover", "condensed", "responsive"))
+```

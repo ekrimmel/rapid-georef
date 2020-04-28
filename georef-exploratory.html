@@ -453,8 +453,10 @@ library(tidyverse)
 
 # Load library for making nice HTML output
 library(kableExtra)</code></pre>
+<hr />
 <div id="big-picture" class="section level3">
 <h3>Big picture</h3>
+<hr />
 <pre class="r"><code># Get count of mammal specimen records on iDigBio
 mammalia_idb &lt;- idig_count_records(rq = list(class = &quot;mammalia&quot;))
 
@@ -486,26 +488,24 @@ mammalia_locality_gbif &lt;- &quot;TBD&quot;</code></pre>
 <p><em><strong>How many specimen records for Mammalia exist on iDigBio and GBIF?</strong></em></p>
 <ul>
 <li><strong>iDigBio</strong> = 5,239,923</li>
-<li><strong>GBIF</strong> = 5,317,920</li>
+<li><strong>GBIF</strong> = 5,305,871</li>
 </ul>
 <p><em><strong>How many of these specimen records are georeferenced already?</strong></em></p>
 <ul>
 <li><strong>iDigBio</strong> = 2,802,596 (53.5%)</li>
-<li><strong>GBIF</strong> = 3,189,999 (60%)</li>
+<li><strong>GBIF</strong> = 3,189,925 (60.1%)</li>
 </ul>
 <p><em><strong>Of those specimen records that are not already georeferenced, how many have something in the locality field?</strong></em></p>
 <ul>
 <li><strong>iDigBio</strong> = 1,686,158 (69.2%)</li>
 <li><strong>GBIF</strong> = TBD</li>
 </ul>
+<hr />
 </div>
-<div id="scoped-by-taxonomic-family-of-interest" class="section level3">
-<h3>Scoped by taxonomic family of interest</h3>
-<p><strong>Primary taxonomic scope</strong>: Rhinolophidae, Hipposideridae</p>
-<p><strong>Secondary taxonomic scope</strong>: Megadermatidae, Rhinopomatidae, Craseonycteridae</p>
-<p><strong>Tertiary taxonomic scope</strong>: Pteropodidae</p>
-<p><strong>Broadest taxonomic scope</strong>: TBD civet and pangolins (Pholidota) taxa</p>
-<p>For each family, we want to know:</p>
+<div id="scoped-by-taxonomic-priorities" class="section level3">
+<h3>Scoped by taxonomic priorities</h3>
+<hr />
+<p>For each taxonomic scope, we want to know:</p>
 <ol style="list-style-type: decimal">
 <li>How many specimen records exist on iDigBio and on GBIF?</li>
 <li>How many of these records are already georeferenced?</li>
@@ -544,16 +544,90 @@ mammalia_locality_gbif &lt;- &quot;TBD&quot;</code></pre>
 <li>Records in need of georeferencing</li>
 </ul></li>
 </ol>
-<pre class="r"><code>queryByFamily &lt;- function(family) {
+<div id="primary-taxonomic-scope" class="section level4">
+<h4>Primary taxonomic scope</h4>
+<p>RHINOLOPHIDAE, HIPPOSIDERIDAE, RHINONYCTERIDAE</p>
+<pre class="r"><code># Rhinonycteridae is a newly designated family and does not exist in the GBIF
+# taxonomic backbone currently, so is not included in GBIF searches below.
+
+# Get count of primary scope specimen records on iDigBio
+primaryScope_idb &lt;- idig_count_records(rq = list(family = c(&quot;Rhinolophidae&quot;, 
+                                                            &quot;Hipposideridae&quot;, 
+                                                            &quot;Rhinonycteridae&quot;)))
+
+# Get count of primary scope specimen records on GBIF, by family
+primaryScope_gbif_1 &lt;- occ_count(taxonKey = 5449,
+                           basisOfRecord = &quot;PRESERVED_SPECIMEN&quot;)
+
+# Get count of primary scope specimen records on GBIF, by family
+primaryScope_gbif_2 &lt;- occ_count(taxonKey = 3239753,
+                           basisOfRecord = &quot;PRESERVED_SPECIMEN&quot;)
+
+# Sum family counts for primary scope specimen records on GBIF
+primaryScope_gbif &lt;- primaryScope_gbif_1 + primaryScope_gbif_2
+
+# Get count of primary scope specimen records that are georeferenced on iDigBio
+primaryScope_georef_idb &lt;- idig_count_records(rq = list(family = c(&quot;Rhinolophidae&quot;, 
+                                                            &quot;Hipposideridae&quot;, 
+                                                            &quot;Rhinonycteridae&quot;),
+                                                    geopoint = list(
+                                                      type = &quot;exists&quot;)))
+
+# Get count of primary scope specimen records that are georeferenced on GBIF
+primaryScope_georef_gbif_1 &lt;- occ_count(taxonKey = 5449,
+                                  basisOfRecord = &quot;PRESERVED_SPECIMEN&quot;,
+                                  georeferenced = TRUE)
+
+# Get count of primary scope specimen records that are georeferenced on GBIF, by family
+primaryScope_georef_gbif_2 &lt;- occ_count(taxonKey = 3239753,
+                                  basisOfRecord = &quot;PRESERVED_SPECIMEN&quot;,
+                                  georeferenced = TRUE)
+
+# Sum family counts for primary scope specimen records that are georeferenced on GBIF
+primaryScope_georef_gbif &lt;- primaryScope_georef_gbif_1 + primaryScope_georef_gbif_2
+
+# Get count of primary scope specimens that are not georeferenced but do have values
+# in the locality field on iDigBio
+primaryScope_locality_idb &lt;- idig_count_records(rq = list(family = c(&quot;Rhinolophidae&quot;, 
+                                                            &quot;Hipposideridae&quot;, 
+                                                            &quot;Rhinonycteridae&quot;),
+                                                      geopoint = list(
+                                                        type = &quot;missing&quot;),
+                                                      locality = list(
+                                                        type = &quot;exists&quot;)))
+
+# Get count of mammal specimens that are not georeferenced but do have values
+# in the locality field on GBIF
+primaryScope_locality_gbif &lt;- &quot;TBD&quot;</code></pre>
+<p><em><strong>How many specimen records for the primary taxonomic scope exist on iDigBio and GBIF?</strong></em></p>
+<ul>
+<li><strong>iDigBio</strong> = 58,639</li>
+<li><strong>GBIF</strong> = 80,118</li>
+</ul>
+<p><em><strong>How many of these specimen records are georeferenced already?</strong></em></p>
+<ul>
+<li><strong>iDigBio</strong> = 26,911 (45.9%)</li>
+<li><strong>GBIF</strong> = 36,863 (46%)</li>
+</ul>
+<p><em><strong>Of those specimen records that are not already georeferenced, how many have something in the locality field?</strong></em></p>
+<ul>
+<li><strong>iDigBio</strong> = 15,663 (49.4%)</li>
+<li><strong>GBIF</strong> = 22,312 (51.6%)</li>
+</ul>
+<pre class="r"><code>queryByFamily &lt;- function(family, scope) {
   
   # Find GBIF taxonKey for given family
-  taxonKey &lt;- name_backbone(name = family,
+  taxonKey &lt;- vector(&quot;integer&quot;, length(family))
+  
+  for (i in seq_along(family)) {
+    taxonKey[[i]] &lt;- name_backbone(name = family[[i]],
                             rank = &quot;family&quot;,
                             class = &quot;mammalia&quot;)
-  
-  # Rename `taxonKey` with the input family value and make it available
+    }
+
+  # Rename `taxonKey` with the input scope value and make it available
   # in the global environment
-  assign(paste(&quot;taxonKey&quot;, family, sep = &quot;_&quot;), taxonKey, envir = globalenv())
+  # assign(paste(&quot;taxonKey_&quot;, scope, &quot;Scope&quot;, sep = &quot;&quot;), taxonKey, envir = globalenv())
   
   # Get count of specimen records on iDigBio
   idb &lt;- idig_count_records(rq = list(family = family))
@@ -572,13 +646,13 @@ mammalia_locality_gbif &lt;- &quot;TBD&quot;</code></pre>
                                                  type = &quot;exists&quot;)))
   
   # Get count of specimen records on GBIF
-  gbif &lt;- occ_count(taxonKey = taxonKey$usageKey[1],
-                    basisOfRecord = &quot;PRESERVED_SPECIMEN&quot;)
+  # gbif &lt;- occ_count(taxonKey = taxonKey,
+  #                  basisOfRecord = &quot;PRESERVED_SPECIMEN&quot;)
   
   # Get count of specimen records that are georeferenced on GBIF
-  georef_gbif &lt;- occ_count(taxonKey = taxonKey$usageKey[1],
-                           basisOfRecord = &quot;PRESERVED_SPECIMEN&quot;,
-                           georeferenced = TRUE)
+  # georef_gbif &lt;- occ_count(taxonKey = taxonKey,
+  #                         basisOfRecord = &quot;PRESERVED_SPECIMEN&quot;,
+  #                         georeferenced = TRUE)
   
   # Get count of specimens that are not georeferenced but do have values
   # in the locality field on GBIF
@@ -611,9 +685,9 @@ mammalia_locality_gbif &lt;- &quot;TBD&quot;</code></pre>
     locality_gbif,
     &quot;TBD&quot;)
     
-  # Rename `summary` with the input family value and make it available
+  # Rename `summary` with the input scope value and make it available
   # in the global environment
-  assign(paste(&quot;summary&quot;, family, sep = &quot;_&quot;), summary, envir = globalenv())
+  assign(paste(&quot;summary_&quot;, scope, &quot;Scope&quot;, sep = &quot;&quot;), summary, envir = globalenv())
   
   # Pull in specimen records from iDigBio that are not georeferenced but that do
   # have values in the locality field
@@ -647,7 +721,7 @@ mammalia_locality_gbif &lt;- &quot;TBD&quot;</code></pre>
     mutate(matchDuplicates = tolower(matchDuplicates))
   
   # Pull in specimen records from GBIF that are not georeferenced
-  records_gbif &lt;- occ_search(taxonKey = taxonKey$usageKey[1],
+  records_gbif &lt;- occ_search(taxonKey = taxonKey,
                              basisOfRecord = &quot;PRESERVED_SPECIMEN&quot;,
                              hasCoordinate = FALSE,
                              fields = c(&quot;key&quot;,
@@ -668,7 +742,9 @@ mammalia_locality_gbif &lt;- &quot;TBD&quot;</code></pre>
                              limit = 100000)
   
   # Extract dataframe from `records_gbif` list
-  records_gbif &lt;- records_gbif$data
+  records_gbif_1 &lt;- records_gbif$`5449`$data
+  records_gbif_2 &lt;- records_gbif$`3239753`$data
+  records_gbif &lt;- bind_rows(list(records_gbif_1, records_gbif_2), .id = &quot;id&quot;)
   
   # Subset `records_gbif` to include only those records with locality values,
   # and create column to match duplicate records with iDigBio data
@@ -681,8 +757,8 @@ mammalia_locality_gbif &lt;- &quot;TBD&quot;</code></pre>
     mutate(matchDuplicates = tolower(matchDuplicates))
   
   # Join `records_idb` and `records_gbif`
-  records &lt;- records_idb %&gt;% 
-    full_join(records_gbif, by = &quot;matchDuplicates&quot;) %&gt;% 
+  records &lt;- records_gbif %&gt;% 
+    full_join(records_idb, by = &quot;matchDuplicates&quot;) %&gt;% 
     mutate(idigbio = case_when(!is.na(uuid) ~ &quot;yes&quot;)) %&gt;% 
     mutate(gbif = case_when(!is.na(key) ~ &quot;yes&quot;)) %&gt;% 
     mutate(institutionCode = tolower(coalesce(institutioncode, institutionCode))) %&gt;% 
@@ -721,10 +797,10 @@ mammalia_locality_gbif &lt;- &quot;TBD&quot;</code></pre>
 
   # Rename `records` with the input family value and make it available
   # in the global environment
-  assign(paste(&quot;records&quot;, family, sep = &quot;_&quot;), records, envir = globalenv())
+  assign(paste(&quot;records_&quot;, scope, &quot;Scope&quot;, sep = &quot;&quot;), records, envir = globalenv())
   
   # Assign input family value to filename for outputing `records`
-  filename &lt;- paste(&quot;records_&quot;, family, &quot;.csv&quot;, sep = &quot;&quot;)
+  filename &lt;- paste(&quot;records_&quot;, scope, &quot;Scope&quot;, &quot;.csv&quot;, sep = &quot;&quot;)
   
   # Output `records` to a CSV file
   write_csv(records, filename)
@@ -752,102 +828,20 @@ mammalia_locality_gbif &lt;- &quot;TBD&quot;</code></pre>
     
   # Rename `summaryCombo` with the input family value and make it available
   # in the global environment
-  assign(paste(&quot;summaryCombo&quot;, family, sep = &quot;_&quot;), summaryCombo, envir = globalenv())
+  assign(paste(&quot;summaryCombo_&quot;, scope, &quot;Scope&quot;, sep = &quot;&quot;), summaryCombo, envir = globalenv())
   
-}</code></pre>
-<div id="rhinolophidae" class="section level4">
-<h4>RHINOLOPHIDAE</h4>
-<pre class="r"><code>queryByFamily(&quot;Rhinolophidae&quot;)</code></pre>
-<pre><code>## Warning: 494 failed to parse.</code></pre>
-<p><em>Summary of data on iDigBio and on GBIF</em></p>
-<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-source
-</th>
-<th style="text-align:right;">
-totalCount
-</th>
-<th style="text-align:right;">
-georefCount
-</th>
-<th style="text-align:left;">
-georefPercent
-</th>
-<th style="text-align:right;">
-notGeorefCount
-</th>
-<th style="text-align:left;">
-notGeorefPercent
-</th>
-<th style="text-align:left;">
-couldGeorefCount
-</th>
-<th style="text-align:left;">
-couldGeorefPercent
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-iDigBio
-</td>
-<td style="text-align:right;">
-26212
-</td>
-<td style="text-align:right;">
-11815
-</td>
-<td style="text-align:left;">
-45.1%
-</td>
-<td style="text-align:right;">
-14397
-</td>
-<td style="text-align:left;">
-54.9%
-</td>
-<td style="text-align:left;">
-7032
-</td>
-<td style="text-align:left;">
-48.8%
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-GBIF
-</td>
-<td style="text-align:right;">
-40255
-</td>
-<td style="text-align:right;">
-18533
-</td>
-<td style="text-align:left;">
-46%
-</td>
-<td style="text-align:right;">
-21722
-</td>
-<td style="text-align:left;">
-54%
-</td>
-<td style="text-align:left;">
-TBD
-</td>
-<td style="text-align:left;">
-TBD
-</td>
-</tr>
-</tbody>
-</table>
+}
+
+# queryByFamily(family = c(&quot;Rhinolophidae&quot;, &quot;Hipposideridae&quot;, &quot;Rhinonycteridae&quot;),
+#              scope = &quot;primary&quot;)</code></pre>
+<pre class="r"><code># Save time rendering RMarkdown by reading in data from previously-run queries
+summaryCombo_primaryScope &lt;- read_csv(&quot;summaryCombo_primaryScope.csv&quot;)
+records_primaryScope &lt;- read_csv(&quot;records_primaryScope.csv&quot;)</code></pre>
 <div id="data-that-is-not-already-georeferenced-but-has-locality-information" class="section level5">
 <h5>Data that is not already georeferenced but has locality information</h5>
 <p>Summaries below are from iDigBio and GBIF data combined to have a single record per unique combination of institution code + collection code + catalog number.</p>
 <p><em>Summary of combined data</em></p>
+<div style="border: 1px solid #ddd; padding: 5px; overflow-x: scroll; width:100%; ">
 <table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -883,28 +877,28 @@ percentRows_sequence
 <tbody>
 <tr>
 <td style="text-align:right;">
-10766
+23453
 </td>
 <td style="text-align:right;">
-7032
+15663
 </td>
 <td style="text-align:right;">
-10287
+22312
 </td>
 <td style="text-align:right;">
-64
+71
 </td>
 <td style="text-align:right;">
-176
+143
 </td>
 <td style="text-align:right;">
-3290
+5741
 </td>
 <td style="text-align:right;">
-3.3
+6.5
 </td>
 <td style="text-align:right;">
-46.8
+50.6
 </td>
 <td style="text-align:right;">
 0
@@ -912,19 +906,19 @@ percentRows_sequence
 </tr>
 </tbody>
 </table>
+</div>
 <p><em>Top data providers </em></p>
-<div class="kable-table">
-
-<table>
+<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:300px; overflow-x: scroll; width:100%; ">
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
-<th style="text-align:left;">
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
 institutionCode
 </th>
-<th style="text-align:right;">
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
 recordCount
 </th>
-<th style="text-align:right;">
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
 recordPercent
 </th>
 </tr>
@@ -935,10 +929,10 @@ recordPercent
 nhmuk
 </td>
 <td style="text-align:right;">
-2398
+5508
 </td>
 <td style="text-align:right;">
-22.3
+23.5
 </td>
 </tr>
 <tr>
@@ -946,21 +940,10 @@ nhmuk
 usnm
 </td>
 <td style="text-align:right;">
-1921
+4677
 </td>
 <td style="text-align:right;">
-17.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tm
-</td>
-<td style="text-align:right;">
-1230
-</td>
-<td style="text-align:right;">
-11.4
+19.9
 </td>
 </tr>
 <tr>
@@ -968,10 +951,10 @@ tm
 amnh
 </td>
 <td style="text-align:right;">
-1207
+3545
 </td>
 <td style="text-align:right;">
-11.2
+15.1
 </td>
 </tr>
 <tr>
@@ -979,21 +962,21 @@ amnh
 mnhn
 </td>
 <td style="text-align:right;">
-797
+1962
 </td>
 <td style="text-align:right;">
-7.4
+8.4
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-NA
+tm
 </td>
 <td style="text-align:right;">
-718
+1612
 </td>
 <td style="text-align:right;">
-6.7
+6.9
 </td>
 </tr>
 <tr>
@@ -1001,10 +984,21 @@ NA
 rom
 </td>
 <td style="text-align:right;">
-671
+1374
 </td>
 <td style="text-align:right;">
-6.2
+5.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+1276
+</td>
+<td style="text-align:right;">
+5.4
 </td>
 </tr>
 <tr>
@@ -1012,10 +1006,10 @@ rom
 ebd_csic
 </td>
 <td style="text-align:right;">
-595
+1125
 </td>
 <td style="text-align:right;">
-5.5
+4.8
 </td>
 </tr>
 <tr>
@@ -1023,10 +1017,10 @@ ebd_csic
 fmnh
 </td>
 <td style="text-align:right;">
-209
+630
 </td>
 <td style="text-align:right;">
-1.9
+2.7
 </td>
 </tr>
 <tr>
@@ -1034,18 +1028,7 @@ fmnh
 mcz
 </td>
 <td style="text-align:right;">
-174
-</td>
-<td style="text-align:right;">
-1.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-isez-pas
-</td>
-<td style="text-align:right;">
-97
+219
 </td>
 <td style="text-align:right;">
 0.9
@@ -1056,18 +1039,7 @@ isez-pas
 wam
 </td>
 <td style="text-align:right;">
-85
-</td>
-<td style="text-align:right;">
-0.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cas
-</td>
-<td style="text-align:right;">
-62
+138
 </td>
 <td style="text-align:right;">
 0.6
@@ -1075,10 +1047,21 @@ cas
 </tr>
 <tr>
 <td style="text-align:left;">
-ttu
+lacm
 </td>
 <td style="text-align:right;">
-57
+132
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+isez-pas
+</td>
+<td style="text-align:right;">
+115
 </td>
 <td style="text-align:right;">
 0.5
@@ -1086,35 +1069,35 @@ ttu
 </tr>
 <tr>
 <td style="text-align:left;">
+ttu
+</td>
+<td style="text-align:right;">
+83
+</td>
+<td style="text-align:right;">
+0.4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+cas
+</td>
+<td style="text-align:right;">
+80
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
 rbins
 </td>
 <td style="text-align:right;">
-45
+67
 </td>
 <td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-umzc
-</td>
-<td style="text-align:right;">
-43
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-lacm
-</td>
-<td style="text-align:right;">
-40
-</td>
-<td style="text-align:right;">
-0.4
+0.3
 </td>
 </tr>
 <tr>
@@ -1122,10 +1105,54 @@ lacm
 tcwc
 </td>
 <td style="text-align:right;">
-35
+62
 </td>
 <td style="text-align:right;">
 0.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+bpbm
+</td>
+<td style="text-align:right;">
+60
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+umzc
+</td>
+<td style="text-align:right;">
+50
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+wnmu
+</td>
+<td style="text-align:right;">
+50
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+msb
+</td>
+<td style="text-align:right;">
+49
+</td>
+<td style="text-align:right;">
+0.2
 </td>
 </tr>
 <tr>
@@ -1133,10 +1160,10 @@ tcwc
 gnm
 </td>
 <td style="text-align:right;">
-31
+48
 </td>
 <td style="text-align:right;">
-0.3
+0.2
 </td>
 </tr>
 <tr>
@@ -1144,10 +1171,32 @@ gnm
 qm
 </td>
 <td style="text-align:right;">
-31
+39
 </td>
 <td style="text-align:right;">
-0.3
+0.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sama
+</td>
+<td style="text-align:right;">
+39
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+anwc
+</td>
+<td style="text-align:right;">
+30
+</td>
+<td style="text-align:right;">
+0.1
 </td>
 </tr>
 <tr>
@@ -1158,40 +1207,7 @@ mncn
 30
 </td>
 <td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-wnmu
-</td>
-<td style="text-align:right;">
-25
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mzlu
-</td>
-<td style="text-align:right;">
-24
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-bpbm
-</td>
-<td style="text-align:right;">
-23
-</td>
-<td style="text-align:right;">
-0.2
+0.1
 </td>
 </tr>
 <tr>
@@ -1199,40 +1215,7 @@ bpbm
 nhmo
 </td>
 <td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-yama
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ummz
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cumv
-</td>
-<td style="text-align:right;">
-16
+29
 </td>
 <td style="text-align:right;">
 0.1
@@ -1243,7 +1226,7 @@ cumv
 snsb-sapm
 </td>
 <td style="text-align:right;">
-13
+29
 </td>
 <td style="text-align:right;">
 0.1
@@ -1251,21 +1234,10 @@ snsb-sapm
 </tr>
 <tr>
 <td style="text-align:left;">
-msb
+magnt
 </td>
 <td style="text-align:right;">
-12
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-anwc
-</td>
-<td style="text-align:right;">
-11
+27
 </td>
 <td style="text-align:right;">
 0.1
@@ -1273,21 +1245,10 @@ anwc
 </tr>
 <tr>
 <td style="text-align:left;">
-uam
+mzlu
 </td>
 <td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sama
-</td>
-<td style="text-align:right;">
-8
+27
 </td>
 <td style="text-align:right;">
 0.1
@@ -1295,10 +1256,32 @@ sama
 </tr>
 <tr>
 <td style="text-align:left;">
-nmr
+mvz
 </td>
 <td style="text-align:right;">
-7
+25
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+cm
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+cumv
+</td>
+<td style="text-align:right;">
+24
 </td>
 <td style="text-align:right;">
 0.1
@@ -1309,7 +1292,73 @@ nmr
 ucmp
 </td>
 <td style="text-align:right;">
-7
+24
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+uf
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ummz
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+yama
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+uam
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+uwbm
+</td>
+<td style="text-align:right;">
+13
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ypm
+</td>
+<td style="text-align:right;">
+13
 </td>
 <td style="text-align:right;">
 0.1
@@ -1320,7 +1369,73 @@ ucmp
 hsu
 </td>
 <td style="text-align:right;">
-5
+12
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+uconn
+</td>
+<td style="text-align:right;">
+11
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nmv
+</td>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+cmn
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+iict
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nmr
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+rumf
+</td>
+<td style="text-align:right;">
+8
 </td>
 <td style="text-align:right;">
 0.0
@@ -1329,6 +1444,28 @@ hsu
 <tr>
 <td style="text-align:left;">
 ku
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+awmm
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+csulb
 </td>
 <td style="text-align:right;">
 5
@@ -1350,7 +1487,7 @@ mcnb
 </tr>
 <tr>
 <td style="text-align:left;">
-mvz
+mmnh
 </td>
 <td style="text-align:right;">
 5
@@ -1361,32 +1498,10 @@ mvz
 </tr>
 <tr>
 <td style="text-align:left;">
-uf
+nrm
 </td>
 <td style="text-align:right;">
 5
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cm
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-csulb
-</td>
-<td style="text-align:right;">
-4
 </td>
 <td style="text-align:right;">
 0.0
@@ -1405,7 +1520,7 @@ msu
 </tr>
 <tr>
 <td style="text-align:left;">
-uconn
+ucm
 </td>
 <td style="text-align:right;">
 4
@@ -1417,17 +1532,6 @@ uconn
 <tr>
 <td style="text-align:left;">
 eeza
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-iict
 </td>
 <td style="text-align:right;">
 3
@@ -1460,6 +1564,17 @@ psm
 </tr>
 <tr>
 <td style="text-align:left;">
+uaz
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
 zsm
 </td>
 <td style="text-align:right;">
@@ -1471,7 +1586,7 @@ zsm
 </tr>
 <tr>
 <td style="text-align:left;">
-cmn
+crcm
 </td>
 <td style="text-align:right;">
 2
@@ -1482,7 +1597,18 @@ cmn
 </tr>
 <tr>
 <td style="text-align:left;">
-crcm
+emu
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+inhs
 </td>
 <td style="text-align:right;">
 2
@@ -1537,17 +1663,6 @@ uafmc
 </tr>
 <tr>
 <td style="text-align:left;">
-ucm
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
 ugent
 </td>
 <td style="text-align:right;">
@@ -1559,7 +1674,7 @@ ugent
 </tr>
 <tr>
 <td style="text-align:left;">
-awmm
+dmns
 </td>
 <td style="text-align:right;">
 1
@@ -1581,51 +1696,7 @@ fhsm
 </tr>
 <tr>
 <td style="text-align:left;">
-inhs
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mmnh
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nmv
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uaz
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uwbm
+ubcbbm
 </td>
 <td style="text-align:right;">
 1
@@ -1638,18 +1709,17 @@ uwbm
 </table>
 </div>
 <p><em>Unique values for country</em></p>
-<div class="kable-table">
-
-<table>
+<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:300px; overflow-x: scroll; width:100%; ">
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
-<th style="text-align:left;">
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
 country
 </th>
-<th style="text-align:right;">
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
 recordCount
 </th>
-<th style="text-align:right;">
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
 recordPercent
 </th>
 </tr>
@@ -1660,10 +1730,10 @@ recordPercent
 NA
 </td>
 <td style="text-align:right;">
-1738
+2593
 </td>
 <td style="text-align:right;">
-16.1
+11.1
 </td>
 </tr>
 <tr>
@@ -1671,21 +1741,10 @@ NA
 malaysia
 </td>
 <td style="text-align:right;">
-638
+1743
 </td>
 <td style="text-align:right;">
-5.9
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-china
-</td>
-<td style="text-align:right;">
-565
-</td>
-<td style="text-align:right;">
-5.2
+7.4
 </td>
 </tr>
 <tr>
@@ -1693,54 +1752,43 @@ china
 indonesia
 </td>
 <td style="text-align:right;">
-556
+1735
 </td>
 <td style="text-align:right;">
-5.2
+7.4
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-spain
+papua new guinea
 </td>
 <td style="text-align:right;">
-483
+1246
 </td>
 <td style="text-align:right;">
-4.5
+5.3
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-france
+tanzania, united republic of
 </td>
 <td style="text-align:right;">
-460
+1194
 </td>
 <td style="text-align:right;">
-4.3
+5.1
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-australia
+china
 </td>
 <td style="text-align:right;">
-420
+938
 </td>
 <td style="text-align:right;">
-3.9
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-south africa
-</td>
-<td style="text-align:right;">
-348
-</td>
-<td style="text-align:right;">
-3.2
+4.0
 </td>
 </tr>
 <tr>
@@ -1748,29 +1796,18 @@ south africa
 kenya
 </td>
 <td style="text-align:right;">
-341
+841
 </td>
 <td style="text-align:right;">
-3.2
+3.6
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-taiwan
+viet nam
 </td>
 <td style="text-align:right;">
-340
-</td>
-<td style="text-align:right;">
-3.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-egypt
-</td>
-<td style="text-align:right;">
-298
+660
 </td>
 <td style="text-align:right;">
 2.8
@@ -1778,10 +1815,32 @@ egypt
 </tr>
 <tr>
 <td style="text-align:left;">
-thailand
+india
 </td>
 <td style="text-align:right;">
-277
+654
+</td>
+<td style="text-align:right;">
+2.8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+egypt
+</td>
+<td style="text-align:right;">
+610
+</td>
+<td style="text-align:right;">
+2.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+australia
+</td>
+<td style="text-align:right;">
+607
 </td>
 <td style="text-align:right;">
 2.6
@@ -1792,54 +1851,54 @@ thailand
 philippines
 </td>
 <td style="text-align:right;">
-264
+566
 </td>
 <td style="text-align:right;">
-2.5
+2.4
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-vietnam
+thailand
 </td>
 <td style="text-align:right;">
-243
+563
 </td>
 <td style="text-align:right;">
-2.3
+2.4
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-india
+taiwan
 </td>
 <td style="text-align:right;">
-219
+559
 </td>
 <td style="text-align:right;">
-2.0
+2.4
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-laos
+france
 </td>
 <td style="text-align:right;">
-216
+515
 </td>
 <td style="text-align:right;">
-2.0
+2.2
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-ethiopia
+spain
 </td>
 <td style="text-align:right;">
-141
+487
 </td>
 <td style="text-align:right;">
-1.3
+2.1
 </td>
 </tr>
 <tr>
@@ -1847,65 +1906,10 @@ ethiopia
 senegal
 </td>
 <td style="text-align:right;">
-138
+479
 </td>
 <td style="text-align:right;">
-1.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-suisse
-</td>
-<td style="text-align:right;">
-138
-</td>
-<td style="text-align:right;">
-1.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-algeria
-</td>
-<td style="text-align:right;">
-130
-</td>
-<td style="text-align:right;">
-1.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-united kingdom
-</td>
-<td style="text-align:right;">
-129
-</td>
-<td style="text-align:right;">
-1.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-myanmar
-</td>
-<td style="text-align:right;">
-125
-</td>
-<td style="text-align:right;">
-1.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-unknown or invalid
-</td>
-<td style="text-align:right;">
-118
-</td>
-<td style="text-align:right;">
-1.1
+2.0
 </td>
 </tr>
 <tr>
@@ -1913,208 +1917,10 @@ unknown or invalid
 equatorial guinea
 </td>
 <td style="text-align:right;">
-112
+452
 </td>
 <td style="text-align:right;">
-1.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-italy
-</td>
-<td style="text-align:right;">
-104
-</td>
-<td style="text-align:right;">
-1.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-japan
-</td>
-<td style="text-align:right;">
-90
-</td>
-<td style="text-align:right;">
-0.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-botswana
-</td>
-<td style="text-align:right;">
-80
-</td>
-<td style="text-align:right;">
-0.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-papua new guinea
-</td>
-<td style="text-align:right;">
-74
-</td>
-<td style="text-align:right;">
-0.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tanzania
-</td>
-<td style="text-align:right;">
-73
-</td>
-<td style="text-align:right;">
-0.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-afghanistan
-</td>
-<td style="text-align:right;">
-72
-</td>
-<td style="text-align:right;">
-0.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-switzerland
-</td>
-<td style="text-align:right;">
-68
-</td>
-<td style="text-align:right;">
-0.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-viet nam
-</td>
-<td style="text-align:right;">
-66
-</td>
-<td style="text-align:right;">
-0.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-zimbabwe
-</td>
-<td style="text-align:right;">
-64
-</td>
-<td style="text-align:right;">
-0.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-greece
-</td>
-<td style="text-align:right;">
-62
-</td>
-<td style="text-align:right;">
-0.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tanzania, united republic of
-</td>
-<td style="text-align:right;">
-61
-</td>
-<td style="text-align:right;">
-0.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uganda
-</td>
-<td style="text-align:right;">
-57
-</td>
-<td style="text-align:right;">
-0.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-zambia
-</td>
-<td style="text-align:right;">
-52
-</td>
-<td style="text-align:right;">
-0.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-liberia
-</td>
-<td style="text-align:right;">
-49
-</td>
-<td style="text-align:right;">
-0.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sri lanka
-</td>
-<td style="text-align:right;">
-49
-</td>
-<td style="text-align:right;">
-0.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-burma
-</td>
-<td style="text-align:right;">
-45
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-guinea
-</td>
-<td style="text-align:right;">
-39
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-inde
-</td>
-<td style="text-align:right;">
-36
-</td>
-<td style="text-align:right;">
-0.3
+1.9
 </td>
 </tr>
 <tr>
@@ -2122,65 +1928,219 @@ inde
 lao people’s democratic republic
 </td>
 <td style="text-align:right;">
-36
+442
 </td>
 <td style="text-align:right;">
-0.3
+1.9
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-nepal
+south africa
 </td>
 <td style="text-align:right;">
-36
+394
 </td>
 <td style="text-align:right;">
-0.3
+1.7
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-germany
+myanmar
 </td>
 <td style="text-align:right;">
-32
+368
 </td>
 <td style="text-align:right;">
-0.3
+1.6
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-iran
+gabon
 </td>
 <td style="text-align:right;">
-32
+325
 </td>
 <td style="text-align:right;">
-0.3
+1.4
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-israel
+ghana
 </td>
 <td style="text-align:right;">
-32
+271
 </td>
 <td style="text-align:right;">
-0.3
+1.2
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-chine
+ethiopia
 </td>
 <td style="text-align:right;">
-28
+245
 </td>
 <td style="text-align:right;">
-0.3
+1.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+uganda
+</td>
+<td style="text-align:right;">
+217
+</td>
+<td style="text-align:right;">
+0.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+cameroon
+</td>
+<td style="text-align:right;">
+212
+</td>
+<td style="text-align:right;">
+0.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+liberia
+</td>
+<td style="text-align:right;">
+209
+</td>
+<td style="text-align:right;">
+0.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+switzerland
+</td>
+<td style="text-align:right;">
+206
+</td>
+<td style="text-align:right;">
+0.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+algeria
+</td>
+<td style="text-align:right;">
+190
+</td>
+<td style="text-align:right;">
+0.8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sudan
+</td>
+<td style="text-align:right;">
+180
+</td>
+<td style="text-align:right;">
+0.8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+unknown or invalid
+</td>
+<td style="text-align:right;">
+178
+</td>
+<td style="text-align:right;">
+0.8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+zambia
+</td>
+<td style="text-align:right;">
+167
+</td>
+<td style="text-align:right;">
+0.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sri lanka
+</td>
+<td style="text-align:right;">
+155
+</td>
+<td style="text-align:right;">
+0.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+botswana
+</td>
+<td style="text-align:right;">
+143
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sao tome and principe
+</td>
+<td style="text-align:right;">
+143
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+central african republic
+</td>
+<td style="text-align:right;">
+137
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+solomon islands
+</td>
+<td style="text-align:right;">
+136
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+united kingdom
+</td>
+<td style="text-align:right;">
+134
+</td>
+<td style="text-align:right;">
+0.6
 </td>
 </tr>
 <tr>
@@ -2188,29 +2148,95 @@ chine
 centrafricaine, république
 </td>
 <td style="text-align:right;">
-27
+133
 </td>
 <td style="text-align:right;">
-0.3
+0.6
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-ethiopie
+japan
 </td>
 <td style="text-align:right;">
-27
+131
 </td>
 <td style="text-align:right;">
-0.3
+0.6
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-maroc
+madagascar
 </td>
 <td style="text-align:right;">
-27
+130
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+guinea
+</td>
+<td style="text-align:right;">
+129
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+congo, democratic republic of the
+</td>
+<td style="text-align:right;">
+118
+</td>
+<td style="text-align:right;">
+0.5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+italy
+</td>
+<td style="text-align:right;">
+112
+</td>
+<td style="text-align:right;">
+0.5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+morocco
+</td>
+<td style="text-align:right;">
+94
+</td>
+<td style="text-align:right;">
+0.4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+vanuatu
+</td>
+<td style="text-align:right;">
+94
+</td>
+<td style="text-align:right;">
+0.4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+afghanistan
+</td>
+<td style="text-align:right;">
+79
 </td>
 <td style="text-align:right;">
 0.3
@@ -2221,95 +2247,84 @@ maroc
 iran, islamic republic of
 </td>
 <td style="text-align:right;">
-26
+76
 </td>
 <td style="text-align:right;">
-0.2
+0.3
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-morocco
+mozambique
 </td>
 <td style="text-align:right;">
-26
+75
 </td>
 <td style="text-align:right;">
-0.2
+0.3
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-cambodge
+zimbabwe
 </td>
 <td style="text-align:right;">
-25
+75
 </td>
 <td style="text-align:right;">
-0.2
+0.3
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-ellás
+gambia
 </td>
 <td style="text-align:right;">
-24
+66
 </td>
 <td style="text-align:right;">
-0.2
+0.3
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-gabon
+nepal
 </td>
 <td style="text-align:right;">
-24
+65
 </td>
 <td style="text-align:right;">
-0.2
+0.3
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-sierra leone
+greece
 </td>
 <td style="text-align:right;">
-24
+63
 </td>
 <td style="text-align:right;">
-0.2
+0.3
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-sudan
+congo, republic of the
 </td>
 <td style="text-align:right;">
-24
+59
 </td>
 <td style="text-align:right;">
-0.2
+0.3
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-sydafrika
+nigeria
 </td>
 <td style="text-align:right;">
-24
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cameroon
-</td>
-<td style="text-align:right;">
-23
+58
 </td>
 <td style="text-align:right;">
 0.2
@@ -2320,65 +2335,164 @@ cameroon
 malawi
 </td>
 <td style="text-align:right;">
+57
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+cambodia
+</td>
+<td style="text-align:right;">
+50
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+angola
+</td>
+<td style="text-align:right;">
+47
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sierra leone
+</td>
+<td style="text-align:right;">
+43
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+côte d’ivoire
+</td>
+<td style="text-align:right;">
+42
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+u
+</td>
+<td style="text-align:right;">
+39
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+israel
+</td>
+<td style="text-align:right;">
+34
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+germany
+</td>
+<td style="text-align:right;">
+32
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sydafrika
+</td>
+<td style="text-align:right;">
+32
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+somalia
+</td>
+<td style="text-align:right;">
+31
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+niger
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+tunisia
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ellás
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+namibia
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+yemen
+</td>
+<td style="text-align:right;">
 22
 </td>
 <td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mozambique
-</td>
-<td style="text-align:right;">
-22
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo
-</td>
-<td style="text-align:right;">
-21
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nigeria
-</td>
-<td style="text-align:right;">
-21
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ghana
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-malaysia; malaya
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-0.2
+0.1
 </td>
 </tr>
 <tr>
@@ -2389,7 +2503,7 @@ turkey
 19
 </td>
 <td style="text-align:right;">
-0.2
+0.1
 </td>
 </tr>
 <tr>
@@ -2400,7 +2514,7 @@ belgium
 18
 </td>
 <td style="text-align:right;">
-0.2
+0.1
 </td>
 </tr>
 <tr>
@@ -2411,7 +2525,40 @@ hungary
 18
 </td>
 <td style="text-align:right;">
-0.2
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mauritania
+</td>
+<td style="text-align:right;">
+18
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+czechia
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+iraq
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:right;">
+0.1
 </td>
 </tr>
 <tr>
@@ -2420,17 +2567,6 @@ portugal
 </td>
 <td style="text-align:right;">
 17
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-algérie
-</td>
-<td style="text-align:right;">
-16
 </td>
 <td style="text-align:right;">
 0.1
@@ -2460,7 +2596,7 @@ netherlands
 </tr>
 <tr>
 <td style="text-align:left;">
-tunisia
+hong kong
 </td>
 <td style="text-align:right;">
 15
@@ -2482,7 +2618,7 @@ belgië
 </tr>
 <tr>
 <td style="text-align:left;">
-cambodia
+pakistan
 </td>
 <td style="text-align:right;">
 14
@@ -2493,21 +2629,10 @@ cambodia
 </tr>
 <tr>
 <td style="text-align:left;">
-czech republic
+saudi arabia
 </td>
 <td style="text-align:right;">
-14
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-indonesia; borneo
-</td>
-<td style="text-align:right;">
-11
+13
 </td>
 <td style="text-align:right;">
 0.1
@@ -2518,65 +2643,54 @@ indonesia; borneo
 lebanon
 </td>
 <td style="text-align:right;">
+12
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+libya
+</td>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+congo, république démocratique du
+</td>
+<td style="text-align:right;">
 11
 </td>
 <td style="text-align:right;">
-0.1
+0.0
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-thaïlande
+togo
 </td>
 <td style="text-align:right;">
 11
 </td>
 <td style="text-align:right;">
-0.1
+0.0
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-afrique du sud
+korea, republic of
 </td>
 <td style="text-align:right;">
 10
 </td>
 <td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-central african republic
-</td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-indonésie
-</td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-japon
-</td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-0.1
+0.0
 </td>
 </tr>
 <tr>
@@ -2587,7 +2701,7 @@ prathet thai
 10
 </td>
 <td style="text-align:right;">
-0.1
+0.0
 </td>
 </tr>
 <tr>
@@ -2598,18 +2712,51 @@ romania
 10
 </td>
 <td style="text-align:right;">
-0.1
+0.0
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-iraq
+tanzania
+</td>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+benin
 </td>
 <td style="text-align:right;">
 9
 </td>
 <td style="text-align:right;">
-0.1
+0.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+guinea-bissau
+</td>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+syrian arab republic
+</td>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:right;">
+0.0
 </td>
 </tr>
 <tr>
@@ -2620,7 +2767,7 @@ cyprus
 8
 </td>
 <td style="text-align:right;">
-0.1
+0.0
 </td>
 </tr>
 <tr>
@@ -2631,180 +2778,15 @@ italia
 8
 </td>
 <td style="text-align:right;">
-0.1
+0.0
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-italie
+mali
 </td>
 <td style="text-align:right;">
 8
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-laos, république démocratique populaire
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mauritanie
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-pakistan
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-somalia
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-syrienne, république arabe
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-u
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-hong kong
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tunisie
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-angola
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cn
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo, la république démocratique du
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ivory coast
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-korea
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-malaisie
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-africa
-</td>
-<td style="text-align:right;">
-5
 </td>
 <td style="text-align:right;">
 0.0
@@ -2812,10 +2794,10 @@ africa
 </tr>
 <tr>
 <td style="text-align:left;">
-as sūdān
+singapore
 </td>
 <td style="text-align:right;">
-5
+8
 </td>
 <td style="text-align:right;">
 0.0
@@ -2824,6 +2806,39 @@ as sūdān
 <tr>
 <td style="text-align:left;">
 bhārat
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+rwanda
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+new guinea
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+as sūdān
 </td>
 <td style="text-align:right;">
 5
@@ -2845,7 +2860,7 @@ croatia
 </tr>
 <tr>
 <td style="text-align:left;">
-guinea-bissau
+lao
 </td>
 <td style="text-align:right;">
 5
@@ -2856,7 +2871,7 @@ guinea-bissau
 </tr>
 <tr>
 <td style="text-align:left;">
-lao
+palestine, state of
 </td>
 <td style="text-align:right;">
 5
@@ -2878,39 +2893,6 @@ poland
 </tr>
 <tr>
 <td style="text-align:left;">
-rwanda
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-somalie
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-[england; u.k.]
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
 albania
 </td>
 <td style="text-align:right;">
@@ -2922,7 +2904,18 @@ albania
 </tr>
 <tr>
 <td style="text-align:left;">
-espagne
+austria
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+chad
 </td>
 <td style="text-align:right;">
 4
@@ -2944,7 +2937,7 @@ jordan
 </tr>
 <tr>
 <td style="text-align:left;">
-namibia
+russian federation
 </td>
 <td style="text-align:right;">
 4
@@ -2955,29 +2948,7 @@ namibia
 </tr>
 <tr>
 <td style="text-align:left;">
-russia
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-singapore
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-czechia
+eritrea
 </td>
 <td style="text-align:right;">
 3
@@ -2999,17 +2970,6 @@ españa
 </tr>
 <tr>
 <td style="text-align:left;">
-gambia
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
 italien
 </td>
 <td style="text-align:right;">
@@ -3021,18 +2981,7 @@ italien
 </tr>
 <tr>
 <td style="text-align:left;">
-niger
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-palestine, state of
+oman
 </td>
 <td style="text-align:right;">
 3
@@ -3054,29 +3003,7 @@ slovakia
 </tr>
 <tr>
 <td style="text-align:left;">
-togo
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-austria
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-autriche
+al-jazā’ir
 </td>
 <td style="text-align:right;">
 2
@@ -3109,29 +3036,7 @@ burkina faso
 </tr>
 <tr>
 <td style="text-align:left;">
-congo, democratic republic of the
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
 congo, the democratic republic of the
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-eritrea
 </td>
 <td style="text-align:right;">
 2
@@ -3153,18 +3058,7 @@ hrvatska
 </tr>
 <tr>
 <td style="text-align:left;">
-korea, republic of
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-madagascar
+miṣr
 </td>
 <td style="text-align:right;">
 2
@@ -3186,17 +3080,6 @@ montenegro/serbia
 </tr>
 <tr>
 <td style="text-align:left;">
-népal
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
 not recorded
 </td>
 <td style="text-align:right;">
@@ -3208,7 +3091,7 @@ not recorded
 </tr>
 <tr>
 <td style="text-align:left;">
-saudi arabia
+seychelles
 </td>
 <td style="text-align:right;">
 2
@@ -3219,40 +3102,7 @@ saudi arabia
 </tr>
 <tr>
 <td style="text-align:left;">
-sénégal
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-south korea
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tanzanie, république-unie de
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ussr
+south sudan
 </td>
 <td style="text-align:right;">
 2
@@ -3267,39 +3117,6 @@ uzbekistan
 </td>
 <td style="text-align:right;">
 2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-yugoslavia
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-zaire
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-[ghana]
-</td>
-<td style="text-align:right;">
-1
 </td>
 <td style="text-align:right;">
 0.0
@@ -3329,7 +3146,7 @@ azerbaijan
 </tr>
 <tr>
 <td style="text-align:left;">
-benin
+bénin
 </td>
 <td style="text-align:right;">
 1
@@ -3351,51 +3168,7 @@ bhutan
 </tr>
 <tr>
 <td style="text-align:left;">
-borneo
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
 brazil
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo, republic of the
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo, république démocratique du
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-côte d’ivoire
 </td>
 <td style="text-align:right;">
 1
@@ -3428,7 +3201,7 @@ eswatini
 </tr>
 <tr>
 <td style="text-align:left;">
-grèce
+filippinerna
 </td>
 <td style="text-align:right;">
 1
@@ -3439,18 +3212,7 @@ grèce
 </tr>
 <tr>
 <td style="text-align:left;">
-kenya ?
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-liban
+indonésie
 </td>
 <td style="text-align:right;">
 1
@@ -3472,51 +3234,7 @@ malaŵi
 </tr>
 <tr>
 <td style="text-align:left;">
-mali
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
 österreich
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-palestinien, territoire
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-syrian arab republic
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-taïwan
 </td>
 <td style="text-align:right;">
 1
@@ -3571,7370 +3289,9 @@ united states
 </tr>
 <tr>
 <td style="text-align:left;">
-yemen
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-zambia ?
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</div>
-<div id="hipposideridae" class="section level4">
-<h4>HIPPOSIDERIDAE</h4>
-<pre class="r"><code>queryByFamily(&quot;Hipposideridae&quot;)</code></pre>
-<pre><code>## Warning: 628 failed to parse.</code></pre>
-<p><em>Summary of data on iDigBio and on GBIF</em></p>
-<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-source
-</th>
-<th style="text-align:right;">
-totalCount
-</th>
-<th style="text-align:right;">
-georefCount
-</th>
-<th style="text-align:left;">
-georefPercent
-</th>
-<th style="text-align:right;">
-notGeorefCount
-</th>
-<th style="text-align:left;">
-notGeorefPercent
-</th>
-<th style="text-align:left;">
-couldGeorefCount
-</th>
-<th style="text-align:left;">
-couldGeorefPercent
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-iDigBio
-</td>
-<td style="text-align:right;">
-32427
-</td>
-<td style="text-align:right;">
-15096
-</td>
-<td style="text-align:left;">
-46.6%
-</td>
-<td style="text-align:right;">
-17331
-</td>
-<td style="text-align:left;">
-53.4%
-</td>
-<td style="text-align:left;">
-8631
-</td>
-<td style="text-align:left;">
-49.8%
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-GBIF
-</td>
-<td style="text-align:right;">
-39863
-</td>
-<td style="text-align:right;">
-18330
-</td>
-<td style="text-align:left;">
-46%
-</td>
-<td style="text-align:right;">
-21533
-</td>
-<td style="text-align:left;">
-54%
-</td>
-<td style="text-align:left;">
-TBD
-</td>
-<td style="text-align:left;">
-TBD
-</td>
-</tr>
-</tbody>
-</table>
-<div id="data-that-is-not-already-georeferenced-but-has-locality-information-1" class="section level5">
-<h5>Data that is not already georeferenced but has locality information</h5>
-<p>Summaries below are from iDigBio and GBIF data combined to have a single record per unique combination of institution code + collection code + catalog number.</p>
-<p><em>Summary of combined data</em></p>
-<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-totalCount
-</th>
-<th style="text-align:right;">
-totalCount_idigbio
-</th>
-<th style="text-align:right;">
-totalCount_gbif
-</th>
-<th style="text-align:right;">
-uniqueInstitutions
-</th>
-<th style="text-align:right;">
-uniqueCountries
-</th>
-<th style="text-align:right;">
-uniqueLocalities
-</th>
-<th style="text-align:right;">
-percentRows_habitat
-</th>
-<th style="text-align:right;">
-percentRows_prep
-</th>
-<th style="text-align:right;">
-percentRows_sequence
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-12714
-</td>
-<td style="text-align:right;">
-8631
-</td>
-<td style="text-align:right;">
-12025
-</td>
-<td style="text-align:right;">
-56
-</td>
-<td style="text-align:right;">
-129
-</td>
-<td style="text-align:right;">
-2897
-</td>
-<td style="text-align:right;">
-9.2
-</td>
-<td style="text-align:right;">
-53.8
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-</tbody>
-</table>
-<p><em>Top data providers </em></p>
-<div class="kable-table">
-
-<table>
-<thead>
-<tr>
-<th style="text-align:left;">
-institutionCode
-</th>
-<th style="text-align:right;">
-recordCount
-</th>
-<th style="text-align:right;">
-recordPercent
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-nhmuk
-</td>
-<td style="text-align:right;">
-3110
-</td>
-<td style="text-align:right;">
-24.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-usnm
-</td>
-<td style="text-align:right;">
-2756
-</td>
-<td style="text-align:right;">
-21.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-amnh
-</td>
-<td style="text-align:right;">
-2338
-</td>
-<td style="text-align:right;">
-18.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mnhn
-</td>
-<td style="text-align:right;">
-1166
-</td>
-<td style="text-align:right;">
-9.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-rom
-</td>
-<td style="text-align:right;">
-703
-</td>
-<td style="text-align:right;">
-5.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-558
-</td>
-<td style="text-align:right;">
-4.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ebd_csic
-</td>
-<td style="text-align:right;">
-530
-</td>
-<td style="text-align:right;">
-4.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-fmnh
-</td>
-<td style="text-align:right;">
-421
-</td>
-<td style="text-align:right;">
-3.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tm
-</td>
-<td style="text-align:right;">
-385
-</td>
-<td style="text-align:right;">
-3.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-lacm
-</td>
-<td style="text-align:right;">
-92
-</td>
-<td style="text-align:right;">
-0.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-wam
-</td>
-<td style="text-align:right;">
-70
-</td>
-<td style="text-align:right;">
-0.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mcz
-</td>
-<td style="text-align:right;">
-45
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-bpbm
-</td>
-<td style="text-align:right;">
-37
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-msb
-</td>
-<td style="text-align:right;">
-37
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sama
-</td>
-<td style="text-align:right;">
-31
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-magnt
-</td>
-<td style="text-align:right;">
-27
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tcwc
-</td>
-<td style="text-align:right;">
-27
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ttu
-</td>
-<td style="text-align:right;">
-26
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-wnmu
-</td>
-<td style="text-align:right;">
-26
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-rbins
-</td>
-<td style="text-align:right;">
-22
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cm
-</td>
-<td style="text-align:right;">
-20
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mvz
-</td>
-<td style="text-align:right;">
-20
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-anwc
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cas
-</td>
-<td style="text-align:right;">
-18
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-isez-pas
-</td>
-<td style="text-align:right;">
-18
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-gnm
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ucmp
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uf
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-snsb-sapm
-</td>
-<td style="text-align:right;">
-16
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ypm
-</td>
-<td style="text-align:right;">
-13
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uwbm
-</td>
-<td style="text-align:right;">
-12
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-umzc
-</td>
-<td style="text-align:right;">
-11
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nhmo
-</td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nmv
-</td>
-<td style="text-align:right;">
-9
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cumv
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-qm
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-rumf
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-hsu
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uam
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uconn
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cmn
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-iict
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nrm
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ummz
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-awmm
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mmnh
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mzlu
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-emu
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uaz
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ucm
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-csulb
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-dmns
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-inhs
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ku
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nmr
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ubcbbm
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p><em>Unique values for country</em></p>
-<div class="kable-table">
-
-<table>
-<thead>
-<tr>
-<th style="text-align:left;">
-country
-</th>
-<th style="text-align:right;">
-recordCount
-</th>
-<th style="text-align:right;">
-recordPercent
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-papua new guinea
-</td>
-<td style="text-align:right;">
-1172
-</td>
-<td style="text-align:right;">
-9.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-indonesia
-</td>
-<td style="text-align:right;">
-1160
-</td>
-<td style="text-align:right;">
-9.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-malaysia
-</td>
-<td style="text-align:right;">
-945
-</td>
-<td style="text-align:right;">
-7.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tanzania
-</td>
-<td style="text-align:right;">
-903
-</td>
-<td style="text-align:right;">
-7.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-859
-</td>
-<td style="text-align:right;">
-6.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-kenya
-</td>
-<td style="text-align:right;">
-500
-</td>
-<td style="text-align:right;">
-3.9
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-india
-</td>
-<td style="text-align:right;">
-346
-</td>
-<td style="text-align:right;">
-2.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-equatorial guinea
-</td>
-<td style="text-align:right;">
-340
-</td>
-<td style="text-align:right;">
-2.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-vietnam
-</td>
-<td style="text-align:right;">
-333
-</td>
-<td style="text-align:right;">
-2.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-china
-</td>
-<td style="text-align:right;">
-325
-</td>
-<td style="text-align:right;">
-2.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-egypt
-</td>
-<td style="text-align:right;">
-310
-</td>
-<td style="text-align:right;">
-2.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-philippines
-</td>
-<td style="text-align:right;">
-302
-</td>
-<td style="text-align:right;">
-2.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-gabon
-</td>
-<td style="text-align:right;">
-301
-</td>
-<td style="text-align:right;">
-2.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-thailand
-</td>
-<td style="text-align:right;">
-268
-</td>
-<td style="text-align:right;">
-2.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ghana
-</td>
-<td style="text-align:right;">
-251
-</td>
-<td style="text-align:right;">
-2.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-centrafricaine, république
-</td>
-<td style="text-align:right;">
-218
-</td>
-<td style="text-align:right;">
-1.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-taiwan
-</td>
-<td style="text-align:right;">
-218
-</td>
-<td style="text-align:right;">
-1.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sénégal
-</td>
-<td style="text-align:right;">
-187
-</td>
-<td style="text-align:right;">
-1.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cameroon
-</td>
-<td style="text-align:right;">
-184
-</td>
-<td style="text-align:right;">
-1.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-australia
-</td>
-<td style="text-align:right;">
-183
-</td>
-<td style="text-align:right;">
-1.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uganda
-</td>
-<td style="text-align:right;">
-160
-</td>
-<td style="text-align:right;">
-1.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-liberia
-</td>
-<td style="text-align:right;">
-157
-</td>
-<td style="text-align:right;">
-1.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sudan
-</td>
-<td style="text-align:right;">
-154
-</td>
-<td style="text-align:right;">
-1.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-senegal
-</td>
-<td style="text-align:right;">
-152
-</td>
-<td style="text-align:right;">
-1.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-laos
-</td>
-<td style="text-align:right;">
-151
-</td>
-<td style="text-align:right;">
-1.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sao tome and principe
-</td>
-<td style="text-align:right;">
-142
-</td>
-<td style="text-align:right;">
-1.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-solomon islands
-</td>
-<td style="text-align:right;">
-135
-</td>
-<td style="text-align:right;">
-1.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-madagascar
-</td>
-<td style="text-align:right;">
-128
-</td>
-<td style="text-align:right;">
-1.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tanzania, united republic of
-</td>
-<td style="text-align:right;">
-122
-</td>
-<td style="text-align:right;">
-1.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-zambia
-</td>
-<td style="text-align:right;">
-114
-</td>
-<td style="text-align:right;">
-0.9
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-malaisie
-</td>
-<td style="text-align:right;">
-113
-</td>
-<td style="text-align:right;">
-0.9
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-burma
-</td>
-<td style="text-align:right;">
-111
-</td>
-<td style="text-align:right;">
-0.9
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sri lanka
-</td>
-<td style="text-align:right;">
-107
-</td>
-<td style="text-align:right;">
-0.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-vanuatu
-</td>
-<td style="text-align:right;">
-94
-</td>
-<td style="text-align:right;">
-0.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-guinea
-</td>
-<td style="text-align:right;">
-90
-</td>
-<td style="text-align:right;">
-0.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-myanmar
-</td>
-<td style="text-align:right;">
-87
-</td>
-<td style="text-align:right;">
-0.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ethiopia
-</td>
-<td style="text-align:right;">
-77
-</td>
-<td style="text-align:right;">
-0.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-botswana
-</td>
-<td style="text-align:right;">
-63
-</td>
-<td style="text-align:right;">
-0.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-gambia
-</td>
-<td style="text-align:right;">
-63
-</td>
-<td style="text-align:right;">
-0.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-france
-</td>
-<td style="text-align:right;">
-55
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mozambique
-</td>
-<td style="text-align:right;">
-53
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo, democratic republic of the
-</td>
-<td style="text-align:right;">
-52
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tanzanie, république-unie de
-</td>
-<td style="text-align:right;">
-43
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-angola
-</td>
-<td style="text-align:right;">
-41
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-unknown or invalid
-</td>
-<td style="text-align:right;">
-39
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nigeria
-</td>
-<td style="text-align:right;">
-37
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-south africa
-</td>
-<td style="text-align:right;">
-37
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-malawi
-</td>
-<td style="text-align:right;">
-35
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo
-</td>
-<td style="text-align:right;">
-34
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-inde
-</td>
-<td style="text-align:right;">
-31
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-japan
-</td>
-<td style="text-align:right;">
-31
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-u
-</td>
-<td style="text-align:right;">
-31
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-lao people’s democratic republic
-</td>
-<td style="text-align:right;">
-30
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nepal
-</td>
-<td style="text-align:right;">
-30
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-côte d’ivoire
-</td>
-<td style="text-align:right;">
-28
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-algérie
-</td>
-<td style="text-align:right;">
-24
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-maroc
-</td>
-<td style="text-align:right;">
-24
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-malaysia; malaya
-</td>
-<td style="text-align:right;">
-23
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-andaman and nicobar is
-</td>
-<td style="text-align:right;">
-22
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-niger
-</td>
-<td style="text-align:right;">
-22
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-yemen
-</td>
-<td style="text-align:right;">
-21
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-algeria
-</td>
-<td style="text-align:right;">
-20
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo, la république démocratique du
-</td>
-<td style="text-align:right;">
-20
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo, democratic rep. of
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sierra leone
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-somalia
-</td>
-<td style="text-align:right;">
-18
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-viet nam
-</td>
-<td style="text-align:right;">
-18
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-morocco
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-namibia
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-central african republic
-</td>
-<td style="text-align:right;">
-15
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-chine
-</td>
-<td style="text-align:right;">
-14
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-zaire
-</td>
-<td style="text-align:right;">
-13
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-indonésie
-</td>
-<td style="text-align:right;">
-12
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-libya
-</td>
-<td style="text-align:right;">
-12
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-saudi arabia
-</td>
-<td style="text-align:right;">
-11
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-zimbabwe
-</td>
-<td style="text-align:right;">
-11
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo, république démocratique du
-</td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-iran, islamic republic of
-</td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-new guinea
-</td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mauritanie
-</td>
-<td style="text-align:right;">
-9
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cambodia
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-hong kong
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-iran
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-iraq
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sydafrika
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-thaïlande
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-togo
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-afghanistan
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ivory coast
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mali
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-bénin
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-pakistan
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-chad
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo, the democratic republic of the
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-guinea-bissau
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-singapore
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-soudan
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-benin
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-british cameroons [cameroon]
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cambodge
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo, republic of the
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-indonesien
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-libéria
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-namibie
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-oman
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-pays non identifié
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tunisie
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-united states
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-al-jazā’ir
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-australie
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-bhārat
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cameroons [cameroon]
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-egypte
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-israël
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-miṣr
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-rwanda
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-africa
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-austria
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-british isles
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-eritrea
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-filippinerna
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-indonesia; java
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-laos, république démocratique populaire
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mauritania
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-palestine, state of
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-salomon, îles
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sao tomé-et-principe
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-seychelles
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-seychelles is
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</div>
-<div id="megadermatidae" class="section level4">
-<h4>MEGADERMATIDAE</h4>
-<pre class="r"><code>queryByFamily(&quot;Megadermatidae&quot;)</code></pre>
-<pre><code>## Warning: 40 failed to parse.</code></pre>
-<p><em>Summary of data on iDigBio and on GBIF</em></p>
-<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-source
-</th>
-<th style="text-align:right;">
-totalCount
-</th>
-<th style="text-align:right;">
-georefCount
-</th>
-<th style="text-align:left;">
-georefPercent
-</th>
-<th style="text-align:right;">
-notGeorefCount
-</th>
-<th style="text-align:left;">
-notGeorefPercent
-</th>
-<th style="text-align:left;">
-couldGeorefCount
-</th>
-<th style="text-align:left;">
-couldGeorefPercent
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-iDigBio
-</td>
-<td style="text-align:right;">
-4160
-</td>
-<td style="text-align:right;">
-1872
-</td>
-<td style="text-align:left;">
-45%
-</td>
-<td style="text-align:right;">
-2288
-</td>
-<td style="text-align:left;">
-55%
-</td>
-<td style="text-align:left;">
-974
-</td>
-<td style="text-align:left;">
-42.6%
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-GBIF
-</td>
-<td style="text-align:right;">
-4467
-</td>
-<td style="text-align:right;">
-2196
-</td>
-<td style="text-align:left;">
-49.2%
-</td>
-<td style="text-align:right;">
-2271
-</td>
-<td style="text-align:left;">
-50.8%
-</td>
-<td style="text-align:left;">
-TBD
-</td>
-<td style="text-align:left;">
-TBD
-</td>
-</tr>
-</tbody>
-</table>
-<div id="data-that-is-not-already-georeferenced-but-has-locality-information-2" class="section level5">
-<h5>Data that is not already georeferenced but has locality information</h5>
-<p>Summaries below are from iDigBio and GBIF data combined to have a single record per unique combination of institution code + collection code + catalog number.</p>
-<p><em>Summary of combined data</em></p>
-<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-totalCount
-</th>
-<th style="text-align:right;">
-totalCount_idigbio
-</th>
-<th style="text-align:right;">
-totalCount_gbif
-</th>
-<th style="text-align:right;">
-uniqueInstitutions
-</th>
-<th style="text-align:right;">
-uniqueCountries
-</th>
-<th style="text-align:right;">
-uniqueLocalities
-</th>
-<th style="text-align:right;">
-percentRows_habitat
-</th>
-<th style="text-align:right;">
-percentRows_prep
-</th>
-<th style="text-align:right;">
-percentRows_sequence
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-1448
-</td>
-<td style="text-align:right;">
-974
-</td>
-<td style="text-align:right;">
-1401
-</td>
-<td style="text-align:right;">
-34
-</td>
-<td style="text-align:right;">
-59
-</td>
-<td style="text-align:right;">
-587
-</td>
-<td style="text-align:right;">
-1.7
-</td>
-<td style="text-align:right;">
-58.6
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-</tbody>
-</table>
-<p><em>Top data providers </em></p>
-<div class="kable-table">
-
-<table>
-<thead>
-<tr>
-<th style="text-align:left;">
-institutionCode
-</th>
-<th style="text-align:right;">
-recordCount
-</th>
-<th style="text-align:right;">
-recordPercent
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-nhmuk
-</td>
-<td style="text-align:right;">
-436
-</td>
-<td style="text-align:right;">
-30.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-usnm
-</td>
-<td style="text-align:right;">
-373
-</td>
-<td style="text-align:right;">
-25.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-amnh
-</td>
-<td style="text-align:right;">
-145
-</td>
-<td style="text-align:right;">
-10.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mnhn
-</td>
-<td style="text-align:right;">
-83
-</td>
-<td style="text-align:right;">
-5.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-lacm
-</td>
-<td style="text-align:right;">
-71
-</td>
-<td style="text-align:right;">
-4.9
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-61
-</td>
-<td style="text-align:right;">
-4.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-rom
-</td>
-<td style="text-align:right;">
-54
-</td>
-<td style="text-align:right;">
-3.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mcz
-</td>
-<td style="text-align:right;">
-49
-</td>
-<td style="text-align:right;">
-3.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-fmnh
-</td>
-<td style="text-align:right;">
-46
-</td>
-<td style="text-align:right;">
-3.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cumv
-</td>
-<td style="text-align:right;">
-37
-</td>
-<td style="text-align:right;">
-2.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tm
-</td>
-<td style="text-align:right;">
-12
-</td>
-<td style="text-align:right;">
-0.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tcwc
-</td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-0.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-wnmu
-</td>
-<td style="text-align:right;">
-9
-</td>
-<td style="text-align:right;">
-0.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-umzc
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uconn
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uwbm
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-qm
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-wam
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ucm
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-bpbm
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mzlu
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sama
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cas
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cmn
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mri-pas
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mvz
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nhmo
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ucmp
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ummz
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-magnt
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mmnh
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nmv
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-snsb-sapm
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uam
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p><em>Unique values for country</em></p>
-<div class="kable-table">
-
-<table>
-<thead>
-<tr>
-<th style="text-align:left;">
-country
-</th>
-<th style="text-align:right;">
-recordCount
-</th>
-<th style="text-align:right;">
-recordPercent
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-kenya
-</td>
-<td style="text-align:right;">
-313
-</td>
-<td style="text-align:right;">
-21.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-indonesia
-</td>
-<td style="text-align:right;">
-234
-</td>
-<td style="text-align:right;">
-16.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-india
-</td>
-<td style="text-align:right;">
-168
-</td>
-<td style="text-align:right;">
-11.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-98
-</td>
-<td style="text-align:right;">
-6.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sudan
-</td>
-<td style="text-align:right;">
-89
-</td>
-<td style="text-align:right;">
-6.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uganda
-</td>
-<td style="text-align:right;">
-71
-</td>
-<td style="text-align:right;">
-4.9
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-malaysia
-</td>
-<td style="text-align:right;">
-53
-</td>
-<td style="text-align:right;">
-3.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-australia
-</td>
-<td style="text-align:right;">
-44
-</td>
-<td style="text-align:right;">
-3.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-philippines
-</td>
-<td style="text-align:right;">
-32
-</td>
-<td style="text-align:right;">
-2.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-thailand
-</td>
-<td style="text-align:right;">
-31
-</td>
-<td style="text-align:right;">
-2.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-myanmar
-</td>
-<td style="text-align:right;">
-27
-</td>
-<td style="text-align:right;">
-1.9
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-china
-</td>
-<td style="text-align:right;">
-26
-</td>
-<td style="text-align:right;">
-1.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tanzania, united republic of
-</td>
-<td style="text-align:right;">
-25
-</td>
-<td style="text-align:right;">
-1.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ethiopia
-</td>
-<td style="text-align:right;">
-23
-</td>
-<td style="text-align:right;">
-1.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-vietnam
-</td>
-<td style="text-align:right;">
-23
-</td>
-<td style="text-align:right;">
-1.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ethiopie
-</td>
-<td style="text-align:right;">
-21
-</td>
-<td style="text-align:right;">
-1.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-inde
-</td>
-<td style="text-align:right;">
-15
-</td>
-<td style="text-align:right;">
-1.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-laos
-</td>
-<td style="text-align:right;">
-14
-</td>
-<td style="text-align:right;">
-1.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sri lanka
-</td>
-<td style="text-align:right;">
-14
-</td>
-<td style="text-align:right;">
-1.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tanzania
-</td>
-<td style="text-align:right;">
-14
-</td>
-<td style="text-align:right;">
-1.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tanzanie, république-unie de
-</td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-0.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nigeria
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-zaire
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-somalia
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tchad
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-chad
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo, la république démocratique du
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-eritrea
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ghana
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-lao people’s democratic republic
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nepal
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-[ghana]
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cameroon
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-laos, république démocratique populaire
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-niger
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-singapore
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-soudan
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-u
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-bénin
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cambodge
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cambodia
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-centrafricaine, république
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-central african republic
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-lao
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-n/a
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-unknown, captive
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-bhārat
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-gabon
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-india ?
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-indonesia; java
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-indonésie
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-kenya ?
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-madagascar
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-malaisie
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sénégal
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-shrī laṁkā
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-thaïlande
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-viet nam
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-zambia
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</div>
-<div id="rhinopomatidae" class="section level4">
-<h4>RHINOPOMATIDAE</h4>
-<pre class="r"><code>queryByFamily(&quot;Rhinopomatidae&quot;)</code></pre>
-<pre><code>## Warning: 19 failed to parse.</code></pre>
-<p><em>Summary of data on iDigBio and on GBIF</em></p>
-<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-source
-</th>
-<th style="text-align:right;">
-totalCount
-</th>
-<th style="text-align:right;">
-georefCount
-</th>
-<th style="text-align:left;">
-georefPercent
-</th>
-<th style="text-align:right;">
-notGeorefCount
-</th>
-<th style="text-align:left;">
-notGeorefPercent
-</th>
-<th style="text-align:left;">
-couldGeorefCount
-</th>
-<th style="text-align:left;">
-couldGeorefPercent
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-iDigBio
-</td>
-<td style="text-align:right;">
-2036
-</td>
-<td style="text-align:right;">
-983
-</td>
-<td style="text-align:left;">
-48.3%
-</td>
-<td style="text-align:right;">
-1053
-</td>
-<td style="text-align:left;">
-51.7%
-</td>
-<td style="text-align:left;">
-368
-</td>
-<td style="text-align:left;">
-34.9%
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-GBIF
-</td>
-<td style="text-align:right;">
-2289
-</td>
-<td style="text-align:right;">
-1013
-</td>
-<td style="text-align:left;">
-44.3%
-</td>
-<td style="text-align:right;">
-1276
-</td>
-<td style="text-align:left;">
-55.7%
-</td>
-<td style="text-align:left;">
-TBD
-</td>
-<td style="text-align:left;">
-TBD
-</td>
-</tr>
-</tbody>
-</table>
-<div id="data-that-is-not-already-georeferenced-but-has-locality-information-3" class="section level5">
-<h5>Data that is not already georeferenced but has locality information</h5>
-<p>Summaries below are from iDigBio and GBIF data combined to have a single record per unique combination of institution code + collection code + catalog number.</p>
-<p><em>Summary of combined data</em></p>
-<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-totalCount
-</th>
-<th style="text-align:right;">
-totalCount_idigbio
-</th>
-<th style="text-align:right;">
-totalCount_gbif
-</th>
-<th style="text-align:right;">
-uniqueInstitutions
-</th>
-<th style="text-align:right;">
-uniqueCountries
-</th>
-<th style="text-align:right;">
-uniqueLocalities
-</th>
-<th style="text-align:right;">
-percentRows_habitat
-</th>
-<th style="text-align:right;">
-percentRows_prep
-</th>
-<th style="text-align:right;">
-percentRows_sequence
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-718
-</td>
-<td style="text-align:right;">
-368
-</td>
-<td style="text-align:right;">
-707
-</td>
-<td style="text-align:right;">
-16
-</td>
-<td style="text-align:right;">
-29
-</td>
-<td style="text-align:right;">
-192
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-43
-</td>
-<td style="text-align:right;">
-0
-</td>
-</tr>
-</tbody>
-</table>
-<p><em>Top data providers </em></p>
-<div class="kable-table">
-
-<table>
-<thead>
-<tr>
-<th style="text-align:left;">
-institutionCode
-</th>
-<th style="text-align:right;">
-recordCount
-</th>
-<th style="text-align:right;">
-recordPercent
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-nhmuk
-</td>
-<td style="text-align:right;">
-344
-</td>
-<td style="text-align:right;">
-47.9
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-usnm
-</td>
-<td style="text-align:right;">
-249
-</td>
-<td style="text-align:right;">
-34.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mnhn
-</td>
-<td style="text-align:right;">
-50
-</td>
-<td style="text-align:right;">
-7.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-amnh
-</td>
-<td style="text-align:right;">
-16
-</td>
-<td style="text-align:right;">
-2.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-fmnh
-</td>
-<td style="text-align:right;">
-13
-</td>
-<td style="text-align:right;">
-1.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tcwc
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-1.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-1.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-rom
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-1.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mzlu
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-0.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uconn
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-0.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ummz
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-wnmu
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ebd_csic
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sama
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-anwc
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mvz
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p><em>Unique values for country</em></p>
-<div class="kable-table">
-
-<table>
-<thead>
-<tr>
-<th style="text-align:left;">
-country
-</th>
-<th style="text-align:right;">
-recordCount
-</th>
-<th style="text-align:right;">
-recordPercent
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-180
-</td>
-<td style="text-align:right;">
-25.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-egypt
-</td>
-<td style="text-align:right;">
-156
-</td>
-<td style="text-align:right;">
-21.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-iran
-</td>
-<td style="text-align:right;">
-76
-</td>
-<td style="text-align:right;">
-10.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mauritania
-</td>
-<td style="text-align:right;">
-58
-</td>
-<td style="text-align:right;">
-8.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-india
-</td>
-<td style="text-align:right;">
-53
-</td>
-<td style="text-align:right;">
-7.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-kenya
-</td>
-<td style="text-align:right;">
-37
-</td>
-<td style="text-align:right;">
-5.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-pakistan
-</td>
-<td style="text-align:right;">
-26
-</td>
-<td style="text-align:right;">
-3.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-inde
-</td>
-<td style="text-align:right;">
-25
-</td>
-<td style="text-align:right;">
-3.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sudan
-</td>
-<td style="text-align:right;">
-16
-</td>
-<td style="text-align:right;">
-2.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-yemen
-</td>
-<td style="text-align:right;">
-16
-</td>
-<td style="text-align:right;">
-2.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-maroc
-</td>
-<td style="text-align:right;">
-15
-</td>
-<td style="text-align:right;">
-2.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-afghanistan
-</td>
-<td style="text-align:right;">
-11
-</td>
-<td style="text-align:right;">
-1.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ethiopia
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-1.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-iran, islamic republic of
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-1.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-saudi arabia
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-bhārat
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-palestine, state of
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-jordan
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mauritanie
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-djibouti
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-morocco
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-u
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-indonesia
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-israel
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-liban
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nigeria
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-oman
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sénégal
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-unknown or invalid
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</div>
-<div id="craseonycteridae" class="section level4">
-<h4>CRASEONYCTERIDAE</h4>
-<pre class="r"><code>#queryByFamily(&quot;Craseonycteridae&quot;)</code></pre>
-<p><em>Summary of data on iDigBio and on GBIF</em></p>
-<div id="data-that-is-not-already-georeferenced-but-has-locality-information-4" class="section level5">
-<h5>Data that is not already georeferenced but has locality information</h5>
-<p>Summaries below are from iDigBio and GBIF data combined to have a single record per unique combination of institution code + collection code + catalog number.</p>
-<p><em>Summary of combined data</em></p>
-<p><em>Top data providers </em></p>
-<p><em>Unique values for country</em></p>
-</div>
-</div>
-<div id="pteropodidae" class="section level4">
-<h4>PTEROPODIDAE</h4>
-<pre class="r"><code>queryByFamily(&quot;Pteropodidae&quot;)</code></pre>
-<pre><code>## Warning: 732 failed to parse.</code></pre>
-<p><em>Summary of data on iDigBio and on GBIF</em></p>
-<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-source
-</th>
-<th style="text-align:right;">
-totalCount
-</th>
-<th style="text-align:right;">
-georefCount
-</th>
-<th style="text-align:left;">
-georefPercent
-</th>
-<th style="text-align:right;">
-notGeorefCount
-</th>
-<th style="text-align:left;">
-notGeorefPercent
-</th>
-<th style="text-align:left;">
-couldGeorefCount
-</th>
-<th style="text-align:left;">
-couldGeorefPercent
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-iDigBio
-</td>
-<td style="text-align:right;">
-83584
-</td>
-<td style="text-align:right;">
-46532
-</td>
-<td style="text-align:left;">
-55.7%
-</td>
-<td style="text-align:right;">
-37052
-</td>
-<td style="text-align:left;">
-44.3%
-</td>
-<td style="text-align:left;">
-16432
-</td>
-<td style="text-align:left;">
-44.3%
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-GBIF
-</td>
-<td style="text-align:right;">
-93166
-</td>
-<td style="text-align:right;">
-49778
-</td>
-<td style="text-align:left;">
-53.4%
-</td>
-<td style="text-align:right;">
-43388
-</td>
-<td style="text-align:left;">
-46.6%
-</td>
-<td style="text-align:left;">
-TBD
-</td>
-<td style="text-align:left;">
-TBD
-</td>
-</tr>
-</tbody>
-</table>
-<div id="data-that-is-not-already-georeferenced-but-has-locality-information-5" class="section level5">
-<h5>Data that is not already georeferenced but has locality information</h5>
-<p>Summaries below are from iDigBio and GBIF data combined to have a single record per unique combination of institution code + collection code + catalog number.</p>
-<p><em>Summary of combined data</em></p>
-<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-totalCount
-</th>
-<th style="text-align:right;">
-totalCount_idigbio
-</th>
-<th style="text-align:right;">
-totalCount_gbif
-</th>
-<th style="text-align:right;">
-uniqueInstitutions
-</th>
-<th style="text-align:right;">
-uniqueCountries
-</th>
-<th style="text-align:right;">
-uniqueLocalities
-</th>
-<th style="text-align:right;">
-percentRows_habitat
-</th>
-<th style="text-align:right;">
-percentRows_prep
-</th>
-<th style="text-align:right;">
-percentRows_sequence
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-22470
-</td>
-<td style="text-align:right;">
-16432
-</td>
-<td style="text-align:right;">
-20252
-</td>
-<td style="text-align:right;">
-79
-</td>
-<td style="text-align:right;">
-192
-</td>
-<td style="text-align:right;">
-4741
-</td>
-<td style="text-align:right;">
-5.6
-</td>
-<td style="text-align:right;">
-66.4
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-</tbody>
-</table>
-<p><em>Top data providers </em></p>
-<div class="kable-table">
-
-<table>
-<thead>
-<tr>
-<th style="text-align:left;">
-institutionCode
-</th>
-<th style="text-align:right;">
-recordCount
-</th>
-<th style="text-align:right;">
-recordPercent
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-amnh
-</td>
-<td style="text-align:right;">
-5958
-</td>
-<td style="text-align:right;">
-26.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-usnm
-</td>
-<td style="text-align:right;">
-4163
-</td>
-<td style="text-align:right;">
-18.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nhmuk
-</td>
-<td style="text-align:right;">
-3771
-</td>
-<td style="text-align:right;">
-16.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-2030
-</td>
-<td style="text-align:right;">
-9.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mnhn
-</td>
-<td style="text-align:right;">
-1161
-</td>
-<td style="text-align:right;">
-5.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ebd_csic
-</td>
-<td style="text-align:right;">
-936
-</td>
-<td style="text-align:right;">
-4.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-rom
-</td>
-<td style="text-align:right;">
-627
-</td>
-<td style="text-align:right;">
-2.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tm
-</td>
-<td style="text-align:right;">
-536
-</td>
-<td style="text-align:right;">
-2.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uam
-</td>
-<td style="text-align:right;">
-453
-</td>
-<td style="text-align:right;">
-2.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-fmnh
-</td>
-<td style="text-align:right;">
-419
-</td>
-<td style="text-align:right;">
-1.9
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-wam
-</td>
-<td style="text-align:right;">
-298
-</td>
-<td style="text-align:right;">
-1.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mcz
-</td>
-<td style="text-align:right;">
-212
-</td>
-<td style="text-align:right;">
-0.9
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cas
-</td>
-<td style="text-align:right;">
-188
-</td>
-<td style="text-align:right;">
-0.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-bpbm
-</td>
-<td style="text-align:right;">
-169
-</td>
-<td style="text-align:right;">
-0.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-anwc
-</td>
-<td style="text-align:right;">
-167
-</td>
-<td style="text-align:right;">
-0.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-msb
-</td>
-<td style="text-align:right;">
-122
-</td>
-<td style="text-align:right;">
-0.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-lacm
-</td>
-<td style="text-align:right;">
-121
-</td>
-<td style="text-align:right;">
-0.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tcwc
-</td>
-<td style="text-align:right;">
-116
-</td>
-<td style="text-align:right;">
-0.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-qm
-</td>
-<td style="text-align:right;">
-96
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nmr
-</td>
-<td style="text-align:right;">
-82
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ummz
-</td>
-<td style="text-align:right;">
-79
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-gnm
-</td>
-<td style="text-align:right;">
-69
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nmv
-</td>
-<td style="text-align:right;">
-69
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mvz
-</td>
-<td style="text-align:right;">
-61
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cumv
-</td>
-<td style="text-align:right;">
-51
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uf
-</td>
-<td style="text-align:right;">
-45
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-rbins
-</td>
-<td style="text-align:right;">
-34
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cm
-</td>
-<td style="text-align:right;">
-30
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-iict
-</td>
-<td style="text-align:right;">
-30
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uconn
-</td>
-<td style="text-align:right;">
-29
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-umzc
-</td>
-<td style="text-align:right;">
-29
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uwbm
-</td>
-<td style="text-align:right;">
-27
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ku
-</td>
-<td style="text-align:right;">
-24
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-wnmu
-</td>
-<td style="text-align:right;">
-23
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sama
-</td>
-<td style="text-align:right;">
-22
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nhmo
-</td>
-<td style="text-align:right;">
-21
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-hsu
-</td>
-<td style="text-align:right;">
-15
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-awmm
-</td>
-<td style="text-align:right;">
-14
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sdnhm
-</td>
-<td style="text-align:right;">
-14
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ucm
-</td>
-<td style="text-align:right;">
-13
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ypm
-</td>
-<td style="text-align:right;">
-13
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mzlu
-</td>
-<td style="text-align:right;">
-9
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-crcm
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ucmp
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-dmns
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-magnt
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mmnh
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-snsb-sapm
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ubcbbm
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-asnhc
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-lsumz
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-msu
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mcnb
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ttu
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-psm
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-csulb
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-fhsm
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ism
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sui
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-chas
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-clo
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cmn
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-emu
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-macn
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-smf
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uafmc
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ugent
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-zsro
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-inhs
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-isez-pas
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-isu
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-madug-ugto
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mnhnl
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ncsm
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ntnu
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-omnh
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tamz
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-umnh
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-unicamp
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p><em>Unique values for country</em></p>
-<div class="kable-table">
-
-<table>
-<thead>
-<tr>
-<th style="text-align:left;">
-country
-</th>
-<th style="text-align:right;">
-recordCount
-</th>
-<th style="text-align:right;">
-recordPercent
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-indonesia
-</td>
-<td style="text-align:right;">
-5548
-</td>
-<td style="text-align:right;">
-24.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-papua new guinea
-</td>
-<td style="text-align:right;">
-2873
-</td>
-<td style="text-align:right;">
-12.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:right;">
-1528
-</td>
-<td style="text-align:right;">
-6.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-philippines
-</td>
-<td style="text-align:right;">
-1272
-</td>
-<td style="text-align:right;">
-5.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-malaysia
-</td>
-<td style="text-align:right;">
-1212
-</td>
-<td style="text-align:right;">
-5.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-equatorial guinea
-</td>
-<td style="text-align:right;">
-882
-</td>
-<td style="text-align:right;">
-3.9
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nigeria
-</td>
-<td style="text-align:right;">
-628
-</td>
-<td style="text-align:right;">
-2.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-australia
-</td>
-<td style="text-align:right;">
-473
-</td>
-<td style="text-align:right;">
-2.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cambodia
-</td>
-<td style="text-align:right;">
-462
-</td>
-<td style="text-align:right;">
-2.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-kenya
-</td>
-<td style="text-align:right;">
-408
-</td>
-<td style="text-align:right;">
-1.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-guinea
-</td>
-<td style="text-align:right;">
-372
-</td>
-<td style="text-align:right;">
-1.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-gabon
-</td>
-<td style="text-align:right;">
-333
-</td>
-<td style="text-align:right;">
-1.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-vietnam
-</td>
-<td style="text-align:right;">
-333
-</td>
-<td style="text-align:right;">
-1.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uganda
-</td>
-<td style="text-align:right;">
-303
-</td>
-<td style="text-align:right;">
-1.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-liberia
-</td>
-<td style="text-align:right;">
-295
-</td>
-<td style="text-align:right;">
-1.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-india
-</td>
-<td style="text-align:right;">
-292
-</td>
-<td style="text-align:right;">
-1.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-thailand
-</td>
-<td style="text-align:right;">
-291
-</td>
-<td style="text-align:right;">
-1.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cameroon
-</td>
-<td style="text-align:right;">
-288
-</td>
-<td style="text-align:right;">
-1.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-côte d’ivoire
-</td>
-<td style="text-align:right;">
-233
-</td>
-<td style="text-align:right;">
-1.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ethiopia
-</td>
-<td style="text-align:right;">
-228
-</td>
-<td style="text-align:right;">
-1.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sao tome and principe
-</td>
-<td style="text-align:right;">
-186
-</td>
-<td style="text-align:right;">
-0.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ghana
-</td>
-<td style="text-align:right;">
-183
-</td>
-<td style="text-align:right;">
-0.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-solomon islands
-</td>
-<td style="text-align:right;">
-171
-</td>
-<td style="text-align:right;">
-0.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-myanmar
-</td>
-<td style="text-align:right;">
-153
-</td>
-<td style="text-align:right;">
-0.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-madagascar
-</td>
-<td style="text-align:right;">
-144
-</td>
-<td style="text-align:right;">
-0.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-senegal
-</td>
-<td style="text-align:right;">
-134
-</td>
-<td style="text-align:right;">
-0.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tanzania
-</td>
-<td style="text-align:right;">
-133
-</td>
-<td style="text-align:right;">
-0.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-fiji
-</td>
-<td style="text-align:right;">
-130
-</td>
-<td style="text-align:right;">
-0.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-pakistan
-</td>
-<td style="text-align:right;">
-112
-</td>
-<td style="text-align:right;">
-0.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-unknown or invalid
-</td>
-<td style="text-align:right;">
-105
-</td>
-<td style="text-align:right;">
-0.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-indonesia; borneo
-</td>
-<td style="text-align:right;">
-101
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-zaire
-</td>
-<td style="text-align:right;">
-101
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tanzania, united republic of
-</td>
-<td style="text-align:right;">
-96
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-libéria
-</td>
-<td style="text-align:right;">
-89
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo
-</td>
-<td style="text-align:right;">
-80
-</td>
-<td style="text-align:right;">
-0.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-egypt
-</td>
-<td style="text-align:right;">
-73
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-china
-</td>
-<td style="text-align:right;">
-69
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sri lanka
-</td>
-<td style="text-align:right;">
-65
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-angola
-</td>
-<td style="text-align:right;">
-63
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sudan
-</td>
-<td style="text-align:right;">
-62
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-south africa
-</td>
-<td style="text-align:right;">
-60
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-united states
-</td>
-<td style="text-align:right;">
-60
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-vanuatu
-</td>
-<td style="text-align:right;">
-60
-</td>
-<td style="text-align:right;">
-0.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sierra leone
-</td>
-<td style="text-align:right;">
-52
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nepal
-</td>
-<td style="text-align:right;">
-50
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo, république démocratique du
-</td>
-<td style="text-align:right;">
-49
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-malaysia; malaya
-</td>
-<td style="text-align:right;">
-48
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-thaïlande
-</td>
-<td style="text-align:right;">
-46
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-laos
-</td>
-<td style="text-align:right;">
-44
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mariana islands
-</td>
-<td style="text-align:right;">
-44
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-malaisie
-</td>
-<td style="text-align:right;">
-43
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-malawi
-</td>
-<td style="text-align:right;">
-41
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-belau
-</td>
-<td style="text-align:right;">
-39
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-lao people’s democratic republic
-</td>
-<td style="text-align:right;">
-39
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-new caledonia
-</td>
-<td style="text-align:right;">
-39
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-zambia
-</td>
-<td style="text-align:right;">
-37
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-japan
-</td>
-<td style="text-align:right;">
-35
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-seychelles
-</td>
-<td style="text-align:right;">
-34
-</td>
-<td style="text-align:right;">
-0.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cambodge
-</td>
-<td style="text-align:right;">
-33
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-unknown, captive
-</td>
-<td style="text-align:right;">
-33
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo, the democratic republic of the
-</td>
-<td style="text-align:right;">
-31
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-lao
-</td>
-<td style="text-align:right;">
-30
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo, democratic rep. of
-</td>
-<td style="text-align:right;">
-29
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-indonesien
-</td>
-<td style="text-align:right;">
-29
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-guinea-bissau
-</td>
-<td style="text-align:right;">
-27
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-prathet thai
-</td>
-<td style="text-align:right;">
-27
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-singapore
-</td>
-<td style="text-align:right;">
-27
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-caroline islands
-</td>
-<td style="text-align:right;">
-26
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-indonésie
-</td>
-<td style="text-align:right;">
-25
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-central african republic
-</td>
-<td style="text-align:right;">
-22
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-guam
-</td>
-<td style="text-align:right;">
-22
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-possibly fed st of micronesia
-</td>
-<td style="text-align:right;">
-22
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-malaŵi
-</td>
-<td style="text-align:right;">
-21
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-zoo
-</td>
-<td style="text-align:right;">
-21
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-chad
-</td>
-<td style="text-align:right;">
-20
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo, république du
-</td>
-<td style="text-align:right;">
-20
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cyprus
-</td>
-<td style="text-align:right;">
-20
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo, republic of the
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ethiopie
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-maldives
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-andaman and nicobar is
-</td>
-<td style="text-align:right;">
-18
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-gambia
-</td>
-<td style="text-align:right;">
-18
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-zimbabwe
-</td>
-<td style="text-align:right;">
-18
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo, la république démocratique du
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cook islands
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-new guinea
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-u
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-yemen
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mauritius
-</td>
-<td style="text-align:right;">
-16
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-botswana
-</td>
-<td style="text-align:right;">
-15
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-micronesia, federated states of
-</td>
-<td style="text-align:right;">
-15
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sénégal
-</td>
-<td style="text-align:right;">
-15
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tanzanie, république-unie de
-</td>
-<td style="text-align:right;">
-15
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-centrafricaine, république
-</td>
-<td style="text-align:right;">
-13
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-italie
-</td>
-<td style="text-align:right;">
-13
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-possibly palau
-</td>
-<td style="text-align:right;">
-13
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-inde
-</td>
-<td style="text-align:right;">
-12
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-indonesië
-</td>
-<td style="text-align:right;">
-12
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mozambique
-</td>
-<td style="text-align:right;">
-12
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-rwanda
-</td>
-<td style="text-align:right;">
-12
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tonga
-</td>
-<td style="text-align:right;">
-12
-</td>
-<td style="text-align:right;">
-0.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-american samoa
-</td>
-<td style="text-align:right;">
-11
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mali
-</td>
-<td style="text-align:right;">
-11
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-togo
-</td>
-<td style="text-align:right;">
-10
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-bénin
-</td>
-<td style="text-align:right;">
-9
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-africa (continent)
-</td>
-<td style="text-align:right;">
-8
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-bangladesh
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-burma
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-christmas island
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-germany
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ivory coast
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mayotte
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-niger
-</td>
-<td style="text-align:right;">
-7
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-comoros
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-etiopien
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-indonesia; java
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-israel
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-northern mariana islands
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-salomon, îles
-</td>
-<td style="text-align:right;">
-6
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-benin
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cap
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-comores
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-france
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cameroons [cameroon]
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-lebanon
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-malaysia; unknown
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mariannes du nord, îles
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mauritanie
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nouvelle-calédonie
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-australien
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-bhutan
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-burkina faso
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-canada
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-hong kong
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-kenia
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-locality unknown
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-malay peninsula
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mexico
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-miṣr
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-palau
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-papouasie-nouvelle-guinée
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-pilipinas
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-polynésie française
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-somalia
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-[papua new guinea]
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-australie
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-caroline is
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-congo, democratic republic of the
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-egypte
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-indien
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-kamerun
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-madagaskar
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-maroc
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-micronésie, etats fédérés de
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-n/a
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-palestine, state of
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-samoa
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-são tomé &amp; principe
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sesel
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sydafrika
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-taiwan
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
 united states of america
 </td>
 <td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-viet nam
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-as sūdān
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-borneo
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-brazil
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cameron
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-colombia
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-comoro is-union comoros
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-eswatini
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-federated states of micronesia
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-fidji
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-guiné-bissau
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-guinée-bissau
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ʻumān
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-iran
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-iran, islamic republic of
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-kongo
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-madagasca
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-malaysia ?
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-malaysia, thailand
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-nya kaledonien
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-oceanic islands
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-pays non identifié
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-poland
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-presumed australia
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-république centrafricaine
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-singapur
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-soudan
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-spain
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tunisie
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-west africa
-</td>
-<td style="text-align:right;">
 1
 </td>
 <td style="text-align:right;">
@@ -10945,6 +3302,39 @@ west africa
 </table>
 </div>
 </div>
+</div>
+<div id="secondary-taxonomic-scope" class="section level4">
+<h4>Secondary taxonomic scope</h4>
+<p>MEGADERMATIDAE, RHINOPOMATIDAE, CRASEONYCTERIDAE</p>
+</div>
+<div id="tertiary-taxonomic-scope" class="section level4">
+<h4>Tertiary taxonomic scope</h4>
+<p>PTEROPODIDAE</p>
+</div>
+<div id="broadest-taxonomic-scope" class="section level4">
+<h4>Broadest taxonomic scope</h4>
+<p>Pangolins: MANIDAE, PATRIOMANIDAE, ESCAVADODONTIDAE</p>
+<p>Civets:</p>
+<ul>
+<li>Arctogalidia trivirgata</li>
+<li>Macrogalidia musschenbroekii</li>
+<li>Paguma larvata</li>
+<li>Paradoxurus hermaphroditus</li>
+<li>Paradoxurus jerdoni</li>
+<li>Paradoxurus zeylonensis</li>
+<li>Chrotogale owstoni</li>
+<li>Cynogale bennettii</li>
+<li>Diplogale hosei</li>
+<li>Hemigalus derbyanus</li>
+<li>Civettictis civetta</li>
+<li>Viverra civettina</li>
+<li>Viverra megaspila</li>
+<li>Viverra tangalunga</li>
+<li>Viverra zibetha</li>
+<li>Viverricula indica</li>
+<li>Fossa fossana</li>
+<li>Nandinia binotata</li>
+</ul>
 </div>
 </div>
 

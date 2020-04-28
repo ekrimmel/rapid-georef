@@ -5,6 +5,7 @@ output:
     code_folding: hide
     df_print: kable
 ---
+
 ```{r message = FALSE}
 # Load core libraries; install these packages if you have not already
 library(ridigbio)
@@ -14,8 +15,18 @@ library(tidyverse)
 # Load library for making nice HTML output
 library(kableExtra)
 ```
+```{r global_options, include = FALSE}
+# Set global chunk options
+knitr::opts_chunk$set(warning = FALSE,
+                      message = FALSE,
+                      results = 'asis')
+```
+
+----------
 
 ### Big picture
+
+----------
 
 ```{r}
 # Get count of mammal specimen records on iDigBio
@@ -63,17 +74,13 @@ _**Of those specimen records that are not already georeferenced, how many have s
 - **iDigBio** = `r format(mammalia_locality_idb, big.mark = ",")` (`r round(sum(mammalia_locality_idb/(mammalia_idb-mammalia_georef_idb)*100), 1)`%)
 - **GBIF** = `r mammalia_locality_gbif`
 
-### Scoped by taxonomic family of interest
+----------
 
-**Primary taxonomic scope**: Rhinolophidae, Hipposideridae
+### Scoped by taxonomic priorities
 
-**Secondary taxonomic scope**: Megadermatidae, Rhinopomatidae, Craseonycteridae
+----------
 
-**Tertiary taxonomic scope**: Pteropodidae
-
-**Broadest taxonomic scope**: TBD civet and pangolins (Pholidota) taxa
-
-For each family, we want to know:
+For each taxonomic scope, we want to know:
 
 1. How many specimen records exist on iDigBio and on GBIF?
 1. How many of these records are already georeferenced?
@@ -100,17 +107,95 @@ For each family, we want to know:
     - All records
     - Records in need of georeferencing
 
+#### Primary taxonomic scope
+
+RHINOLOPHIDAE, HIPPOSIDERIDAE, RHINONYCTERIDAE
+
 ```{r}
-queryByFamily <- function(family) {
+# Rhinonycteridae is a newly designated family and does not exist in the GBIF
+# taxonomic backbone currently, so is not included in GBIF searches below.
+
+# Get count of primary scope specimen records on iDigBio
+primaryScope_idb <- idig_count_records(rq = list(family = c("Rhinolophidae", 
+                                                            "Hipposideridae", 
+                                                            "Rhinonycteridae")))
+
+# Get count of primary scope specimen records on GBIF, by family
+primaryScope_gbif_1 <- occ_count(taxonKey = 5449,
+                           basisOfRecord = "PRESERVED_SPECIMEN")
+
+# Get count of primary scope specimen records on GBIF, by family
+primaryScope_gbif_2 <- occ_count(taxonKey = 3239753,
+                           basisOfRecord = "PRESERVED_SPECIMEN")
+
+# Sum family counts for primary scope specimen records on GBIF
+primaryScope_gbif <- primaryScope_gbif_1 + primaryScope_gbif_2
+
+# Get count of primary scope specimen records that are georeferenced on iDigBio
+primaryScope_georef_idb <- idig_count_records(rq = list(family = c("Rhinolophidae", 
+                                                            "Hipposideridae", 
+                                                            "Rhinonycteridae"),
+                                                    geopoint = list(
+                                                      type = "exists")))
+
+# Get count of primary scope specimen records that are georeferenced on GBIF
+primaryScope_georef_gbif_1 <- occ_count(taxonKey = 5449,
+                                  basisOfRecord = "PRESERVED_SPECIMEN",
+                                  georeferenced = TRUE)
+
+# Get count of primary scope specimen records that are georeferenced on GBIF, by family
+primaryScope_georef_gbif_2 <- occ_count(taxonKey = 3239753,
+                                  basisOfRecord = "PRESERVED_SPECIMEN",
+                                  georeferenced = TRUE)
+
+# Sum family counts for primary scope specimen records that are georeferenced on GBIF
+primaryScope_georef_gbif <- primaryScope_georef_gbif_1 + primaryScope_georef_gbif_2
+
+# Get count of primary scope specimens that are not georeferenced but do have values
+# in the locality field on iDigBio
+primaryScope_locality_idb <- idig_count_records(rq = list(family = c("Rhinolophidae", 
+                                                            "Hipposideridae", 
+                                                            "Rhinonycteridae"),
+                                                      geopoint = list(
+                                                        type = "missing"),
+                                                      locality = list(
+                                                        type = "exists")))
+
+# Get count of mammal specimens that are not georeferenced but do have values
+# in the locality field on GBIF
+primaryScope_locality_gbif <- "TBD"
+```
+
+_**How many specimen records for the primary taxonomic scope exist on iDigBio and GBIF?**_
+
+- **iDigBio** = `r format(primaryScope_idb, big.mark = ",")`
+- **GBIF** = `r format(primaryScope_gbif, big.mark = ",")`
+
+_**How many of these specimen records are georeferenced already?**_
+
+- **iDigBio** = `r format(primaryScope_georef_idb, big.mark = ",")` (`r round(sum(primaryScope_georef_idb/primaryScope_idb*100), 1)`%)
+- **GBIF** = `r format(primaryScope_georef_gbif, big.mark = ",")` (`r round(sum(primaryScope_georef_gbif/primaryScope_gbif*100), 1)`%)
+
+_**Of those specimen records that are not already georeferenced, how many have something in the locality field?**_
+
+- **iDigBio** = `r format(primaryScope_locality_idb, big.mark = ",")` (`r round(sum(primaryScope_locality_idb/(primaryScope_idb-primaryScope_georef_idb)*100), 1)`%)
+- **GBIF** = 22,312 (51.6%)
+
+```{r}
+queryByFamily <- function(family, scope) {
   
   # Find GBIF taxonKey for given family
-  taxonKey <- name_backbone(name = family,
+  taxonKey <- vector("integer", length(family))
+  
+  for (i in seq_along(family)) {
+    taxonKey[[i]] <- name_backbone(name = family[[i]],
                             rank = "family",
                             class = "mammalia")
-  
-  # Rename `taxonKey` with the input family value and make it available
+    }
+
+  # Rename `taxonKey` with the input scope value and make it available
   # in the global environment
-  assign(paste("taxonKey", family, sep = "_"), taxonKey, envir = globalenv())
+  # assign(paste("taxonKey_", scope, "Scope", sep = ""), taxonKey, envir = globalenv())
   
   # Get count of specimen records on iDigBio
   idb <- idig_count_records(rq = list(family = family))
@@ -129,13 +214,13 @@ queryByFamily <- function(family) {
                                                  type = "exists")))
   
   # Get count of specimen records on GBIF
-  gbif <- occ_count(taxonKey = taxonKey$usageKey[1],
-                    basisOfRecord = "PRESERVED_SPECIMEN")
+  # gbif <- occ_count(taxonKey = taxonKey,
+  #                  basisOfRecord = "PRESERVED_SPECIMEN")
   
   # Get count of specimen records that are georeferenced on GBIF
-  georef_gbif <- occ_count(taxonKey = taxonKey$usageKey[1],
-                           basisOfRecord = "PRESERVED_SPECIMEN",
-                           georeferenced = TRUE)
+  # georef_gbif <- occ_count(taxonKey = taxonKey,
+  #                         basisOfRecord = "PRESERVED_SPECIMEN",
+  #                         georeferenced = TRUE)
   
   # Get count of specimens that are not georeferenced but do have values
   # in the locality field on GBIF
@@ -168,9 +253,9 @@ queryByFamily <- function(family) {
     locality_gbif,
     "TBD")
     
-  # Rename `summary` with the input family value and make it available
+  # Rename `summary` with the input scope value and make it available
   # in the global environment
-  assign(paste("summary", family, sep = "_"), summary, envir = globalenv())
+  assign(paste("summary_", scope, "Scope", sep = ""), summary, envir = globalenv())
   
   # Pull in specimen records from iDigBio that are not georeferenced but that do
   # have values in the locality field
@@ -204,7 +289,7 @@ queryByFamily <- function(family) {
     mutate(matchDuplicates = tolower(matchDuplicates))
   
   # Pull in specimen records from GBIF that are not georeferenced
-  records_gbif <- occ_search(taxonKey = taxonKey$usageKey[1],
+  records_gbif <- occ_search(taxonKey = taxonKey,
                              basisOfRecord = "PRESERVED_SPECIMEN",
                              hasCoordinate = FALSE,
                              fields = c("key",
@@ -225,7 +310,9 @@ queryByFamily <- function(family) {
                              limit = 100000)
   
   # Extract dataframe from `records_gbif` list
-  records_gbif <- records_gbif$data
+  records_gbif_1 <- records_gbif$`5449`$data
+  records_gbif_2 <- records_gbif$`3239753`$data
+  records_gbif <- bind_rows(list(records_gbif_1, records_gbif_2), .id = "id")
   
   # Subset `records_gbif` to include only those records with locality values,
   # and create column to match duplicate records with iDigBio data
@@ -238,8 +325,8 @@ queryByFamily <- function(family) {
     mutate(matchDuplicates = tolower(matchDuplicates))
   
   # Join `records_idb` and `records_gbif`
-  records <- records_idb %>% 
-    full_join(records_gbif, by = "matchDuplicates") %>% 
+  records <- records_gbif %>% 
+    full_join(records_idb, by = "matchDuplicates") %>% 
     mutate(idigbio = case_when(!is.na(uuid) ~ "yes")) %>% 
     mutate(gbif = case_when(!is.na(key) ~ "yes")) %>% 
     mutate(institutionCode = tolower(coalesce(institutioncode, institutionCode))) %>% 
@@ -278,10 +365,10 @@ queryByFamily <- function(family) {
 
   # Rename `records` with the input family value and make it available
   # in the global environment
-  assign(paste("records", family, sep = "_"), records, envir = globalenv())
+  assign(paste("records_", scope, "Scope", sep = ""), records, envir = globalenv())
   
   # Assign input family value to filename for outputing `records`
-  filename <- paste("records_", family, ".csv", sep = "")
+  filename <- paste("records_", scope, "Scope", ".csv", sep = "")
   
   # Output `records` to a CSV file
   write_csv(records, filename)
@@ -309,295 +396,90 @@ queryByFamily <- function(family) {
     
   # Rename `summaryCombo` with the input family value and make it available
   # in the global environment
-  assign(paste("summaryCombo", family, sep = "_"), summaryCombo, envir = globalenv())
+  assign(paste("summaryCombo_", scope, "Scope", sep = ""), summaryCombo, envir = globalenv())
   
 }
+
+# queryByFamily(family = c("Rhinolophidae", "Hipposideridae", "Rhinonycteridae"),
+#              scope = "primary")
 ```
-
-#### RHINOLOPHIDAE
-
 ```{r}
-queryByFamily("Rhinolophidae")
+# Save time rendering RMarkdown by reading in data from previously-run queries
+summaryCombo_primaryScope <- read_csv("summaryCombo_primaryScope.csv")
+records_primaryScope <- read_csv("records_primaryScope.csv")
 ```
-
-_Summary of data on iDigBio and on GBIF_
-
-```{r echo = FALSE, results = 'asis'}
-knitr::kable(summary_Rhinolophidae) %>% 
-    kable_styling(bootstrap_options = 
-                         c("striped", "hover", "condensed", "responsive"))
-```
-
 ##### Data that is not already georeferenced but has locality information
 
 Summaries below are from iDigBio and GBIF data combined to have a single record per unique combination of institution code + collection code + catalog number.
 
 _Summary of combined data_
 
-```{r echo = FALSE, results = 'asis'}
-knitr::kable(summaryCombo_Rhinolophidae) %>% 
+```{r echo = FALSE}
+knitr::kable(summaryCombo_primaryScope) %>% 
     kable_styling(bootstrap_options = 
-                         c("striped", "hover", "condensed", "responsive"))
+                         c("striped", "hover", "condensed", "responsive")) %>% 
+  scroll_box(width = "100%")
 ```
 
 _Top data providers _
 
 ```{r echo = FALSE, results = 'asis'}
-records_Rhinolophidae %>% 
+records_primaryScope %>% 
   group_by(institutionCode) %>% 
   tally() %>% 
   arrange(desc(n)) %>% 
   mutate(recordPercent = round(n/sum(n)*100, 1)) %>% 
-  rename(recordCount = n) 
+  rename(recordCount = n) %>% 
+  knitr::kable() %>% 
+  kable_styling(bootstrap_options = 
+                         c("striped", "hover", "condensed", "responsive")) %>% 
+  scroll_box(width = "100%", height = "300px")
 ```
 
 _Unique values for country_
 
 ```{r echo = FALSE, results = 'asis'}
-records_Rhinolophidae %>% 
+records_primaryScope %>% 
   group_by(country) %>% 
   tally() %>% 
   arrange(desc(n)) %>% 
   mutate(recordPercent = round(n/sum(n)*100, 1)) %>% 
-  rename(recordCount = n) 
+  rename(recordCount = n) %>% 
+  knitr::kable() %>% 
+  kable_styling(bootstrap_options = 
+                         c("striped", "hover", "condensed", "responsive")) %>% 
+  scroll_box(width = "100%", height = "300px")
 ```
 
-#### HIPPOSIDERIDAE
+#### Secondary taxonomic scope
 
-```{r}
-queryByFamily("Hipposideridae")
-```
+MEGADERMATIDAE, RHINOPOMATIDAE, CRASEONYCTERIDAE
 
-_Summary of data on iDigBio and on GBIF_
+#### Tertiary taxonomic scope
 
-```{r echo = FALSE, results = 'asis'}
-knitr::kable(summary_Hipposideridae) %>% 
-    kable_styling(bootstrap_options = 
-                         c("striped", "hover", "condensed", "responsive"))
-```
+PTEROPODIDAE
 
-##### Data that is not already georeferenced but has locality information
+#### Broadest taxonomic scope
 
-Summaries below are from iDigBio and GBIF data combined to have a single record per unique combination of institution code + collection code + catalog number.
+Pangolins: MANIDAE, PATRIOMANIDAE, ESCAVADODONTIDAE
 
-_Summary of combined data_
+Civets:
 
-```{r echo = FALSE, results = 'asis'}
-knitr::kable(summaryCombo_Hipposideridae) %>% 
-    kable_styling(bootstrap_options = 
-                         c("striped", "hover", "condensed", "responsive"))
-```
-
-_Top data providers _
-
-```{r echo = FALSE, results = 'asis'}
-records_Hipposideridae %>% 
-  group_by(institutionCode) %>% 
-  tally() %>% 
-  arrange(desc(n)) %>% 
-  mutate(recordPercent = round(n/sum(n)*100, 1)) %>% 
-  rename(recordCount = n) 
-```
-
-_Unique values for country_
-
-```{r echo = FALSE, results = 'asis'}
-records_Hipposideridae %>% 
-  group_by(country) %>% 
-  tally() %>% 
-  arrange(desc(n)) %>% 
-  mutate(recordPercent = round(n/sum(n)*100, 1)) %>% 
-  rename(recordCount = n) 
-```
-
-#### MEGADERMATIDAE
-
-```{r}
-queryByFamily("Megadermatidae")
-```
-
-_Summary of data on iDigBio and on GBIF_
-
-```{r echo = FALSE, results = 'asis'}
-knitr::kable(summary_Megadermatidae) %>% 
-    kable_styling(bootstrap_options = 
-                         c("striped", "hover", "condensed", "responsive"))
-```
-
-##### Data that is not already georeferenced but has locality information
-
-Summaries below are from iDigBio and GBIF data combined to have a single record per unique combination of institution code + collection code + catalog number.
-
-_Summary of combined data_
-
-```{r echo = FALSE, results = 'asis'}
-knitr::kable(summaryCombo_Megadermatidae) %>% 
-    kable_styling(bootstrap_options = 
-                         c("striped", "hover", "condensed", "responsive"))
-```
-
-_Top data providers _
-
-```{r echo = FALSE, results = 'asis'}
-records_Megadermatidae %>% 
-  group_by(institutionCode) %>% 
-  tally() %>% 
-  arrange(desc(n)) %>% 
-  mutate(recordPercent = round(n/sum(n)*100, 1)) %>% 
-  rename(recordCount = n) 
-```
-
-_Unique values for country_
-
-```{r echo = FALSE, results = 'asis'}
-records_Megadermatidae %>% 
-  group_by(country) %>% 
-  tally() %>% 
-  arrange(desc(n)) %>% 
-  mutate(recordPercent = round(n/sum(n)*100, 1)) %>% 
-  rename(recordCount = n) 
-```
-
-#### RHINOPOMATIDAE
-
-```{r}
-queryByFamily("Rhinopomatidae")
-```
-
-_Summary of data on iDigBio and on GBIF_
-
-```{r echo = FALSE, results = 'asis'}
-knitr::kable(summary_Rhinopomatidae) %>% 
-    kable_styling(bootstrap_options = 
-                         c("striped", "hover", "condensed", "responsive"))
-```
-
-##### Data that is not already georeferenced but has locality information
-
-Summaries below are from iDigBio and GBIF data combined to have a single record per unique combination of institution code + collection code + catalog number.
-
-_Summary of combined data_
-
-```{r echo = FALSE, results = 'asis'}
-knitr::kable(summaryCombo_Rhinopomatidae) %>% 
-    kable_styling(bootstrap_options = 
-                         c("striped", "hover", "condensed", "responsive"))
-```
-
-_Top data providers _
-
-```{r echo = FALSE, results = 'asis'}
-records_Rhinopomatidae %>% 
-  group_by(institutionCode) %>% 
-  tally() %>% 
-  arrange(desc(n)) %>% 
-  mutate(recordPercent = round(n/sum(n)*100, 1)) %>% 
-  rename(recordCount = n) 
-```
-
-_Unique values for country_
-
-```{r echo = FALSE, results = 'asis'}
-records_Rhinopomatidae %>% 
-  group_by(country) %>% 
-  tally() %>% 
-  arrange(desc(n)) %>% 
-  mutate(recordPercent = round(n/sum(n)*100, 1)) %>% 
-  rename(recordCount = n) 
-```
-
-#### CRASEONYCTERIDAE
-
-```{r}
-#queryByFamily("Craseonycteridae")
-```
-
-_Summary of data on iDigBio and on GBIF_
-
-```{r echo = FALSE, results = 'asis'}
-#knitr::kable(summary_Craseonycteridae) %>% 
-#    kable_styling(bootstrap_options = 
-#                         c("striped", "hover", "condensed", "responsive"))
-```
-
-##### Data that is not already georeferenced but has locality information
-
-Summaries below are from iDigBio and GBIF data combined to have a single record per unique combination of institution code + collection code + catalog number.
-
-_Summary of combined data_
-
-```{r echo = FALSE, results = 'asis'}
-#knitr::kable(summaryCombo_Craseonycteridae) %>% 
-#    kable_styling(bootstrap_options = 
-#                         c("striped", "hover", "condensed", "responsive"))
-```
-
-_Top data providers _
-
-```{r echo = FALSE, results = 'asis'}
-#records_Craseonycteridae %>% 
-#  group_by(institutionCode) %>% 
-#  tally() %>% 
-#  arrange(desc(n)) %>% 
-#  mutate(recordPercent = round(n/sum(n)*100, 1)) %>% 
-#  rename(recordCount = n) 
-```
-
-_Unique values for country_
-
-```{r echo = FALSE, results = 'asis'}
-#records_Craseonycteridae %>% 
-#  group_by(country) %>% 
-#  tally() %>% 
-#  arrange(desc(n)) %>% 
-#  mutate(recordPercent = round(n/sum(n)*100, 1)) %>% 
-#  rename(recordCount = n) 
-```
-
-#### PTEROPODIDAE
-
-```{r}
-queryByFamily("Pteropodidae")
-```
-
-_Summary of data on iDigBio and on GBIF_
-
-```{r echo = FALSE, results = 'asis'}
-knitr::kable(summary_Pteropodidae) %>% 
-    kable_styling(bootstrap_options = 
-                         c("striped", "hover", "condensed", "responsive"))
-```
-
-##### Data that is not already georeferenced but has locality information
-
-Summaries below are from iDigBio and GBIF data combined to have a single record per unique combination of institution code + collection code + catalog number.
-
-_Summary of combined data_
-
-```{r echo = FALSE, results = 'asis'}
-knitr::kable(summaryCombo_Pteropodidae) %>% 
-    kable_styling(bootstrap_options = 
-                         c("striped", "hover", "condensed", "responsive"))
-```
-
-_Top data providers _
-
-```{r echo = FALSE, results = 'asis'}
-records_Pteropodidae %>% 
-  group_by(institutionCode) %>% 
-  tally() %>% 
-  arrange(desc(n)) %>% 
-  mutate(recordPercent = round(n/sum(n)*100, 1)) %>% 
-  rename(recordCount = n) 
-```
-
-_Unique values for country_
-
-```{r echo = FALSE, results = 'asis'}
-records_Pteropodidae %>% 
-  group_by(country) %>% 
-  tally() %>% 
-  arrange(desc(n)) %>% 
-  mutate(recordPercent = round(n/sum(n)*100, 1)) %>% 
-  rename(recordCount = n) 
-```
+- Arctogalidia trivirgata
+- Macrogalidia musschenbroekii
+- Paguma larvata
+- Paradoxurus hermaphroditus
+- Paradoxurus jerdoni
+- Paradoxurus zeylonensis
+- Chrotogale owstoni
+- Cynogale bennettii
+- Diplogale hosei
+- Hemigalus derbyanus
+- Civettictis civetta
+- Viverra civettina
+- Viverra megaspila
+- Viverra tangalunga
+- Viverra zibetha
+- Viverricula indica
+- Fossa fossana
+- Nandinia binotata

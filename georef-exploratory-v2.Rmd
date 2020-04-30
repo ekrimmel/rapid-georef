@@ -1,0 +1,545 @@
+---
+title: "Exploratory Analysis for Georeferencing Project"
+output:
+  html_document:
+    code_folding: hide
+    df_print: kable
+---
+
+```{r message = FALSE}
+# Load core libraries; install these packages if you have not already
+library(ridigbio)
+library(rgbif)
+library(tidyverse)
+
+# Load library for making nice HTML output
+library(kableExtra)
+```
+```{r global_options, include = FALSE}
+# Set global chunk options
+knitr::opts_chunk$set(warning = FALSE,
+                      message = FALSE,
+                      results = 'asis')
+```
+
+----------
+
+### Primary taxonomic scope
+
+----------
+
+RHINOLOPHIDAE, HIPPOSIDERIDAE, RHINONYCTERIDAE
+
+```{r message = FALSE, warning = FALSE}
+# Read into R the raw occurrence data from iDigBio, which should be whatever was
+# published by the data provider (e.g. the collection)
+idb_raw <- read_csv("77dfb340-4ab1-4c06-9f0c-eecc0558a9c8/occurrence_raw.csv", 
+                    na = character(),
+                    col_types = cols())
+
+# Rename columns to reflect provenance and remove illegal characters
+idb_raw <- idb_raw %>% 
+  rename_all(function(x){paste0(x, "_idbR")}) %>% 
+  rename_all(funs(str_replace_all(., "dwc:", ""))) %>% 
+  rename_all(funs(str_replace_all(., ":", "_")))
+
+# Read into R the version of occurrence data processed by iDigBio
+idb_processed <- read_csv("77dfb340-4ab1-4c06-9f0c-eecc0558a9c8/occurrence.csv", 
+                          na = character(),
+                          col_types = cols())
+
+# Rename columns to reflect provenance and remove illegal characters
+idb_processed <- idb_processed %>% 
+  rename_all(function(x){paste0(x, "_idbP")}) %>% 
+  rename_all(funs(str_replace_all(., "dwc:", ""))) %>% 
+  rename_all(funs(str_replace_all(., ":", "_"))) 
+
+# Join raw and processed iDigBio data together
+idb_joined <- idb_raw %>% 
+  left_join(idb_processed, by = c("coreid_idbR" = "coreid_idbP"))
+
+# Subset iDigBio data by families of interest
+idb_subset <- idb_joined %>% 
+  mutate(family_idbR = tolower(family_idbR)) %>% 
+  filter(family_idbR %in% c("rhinolophidae", 
+                             "hipposideridae", 
+                             "rhinonycteridae") |
+          family_idbP %in% c("rhinolophidae", 
+                             "hipposideridae", 
+                             "rhinonycteridae")) %>% 
+  unite(matchDuplicates2, 
+          c("institutionCode_idbR", 
+            "collectionCode_idbR", 
+            "catalogNumber_idbR"), 
+          sep = " ", 
+          remove = FALSE) %>% 
+  mutate(matchDuplicates2 = str_squish(tolower(matchDuplicates2))) %>%
+  group_by(matchDuplicates2) %>% 
+  filter() %>% 
+  mutate(matchDuplicates = case_when(row_number() != 1 
+                                     ~ paste("PLACEHOLDER_IDB_", 
+                                           matchDuplicates2,
+                                           sep = ""),
+                                     row_number() == 1 ~ matchDuplicates2)) %>% 
+  ungroup() %>% 
+  mutate(matchDuplicates = make.unique(matchDuplicates))
+
+# Read into R occurrence data from GBIF
+gbif_subset_1 <- read_tsv("0052900-200221144449610/occurrence.txt", 
+                     na = character(),
+                     col_types = cols())
+
+# Rename columns to reflect provenance and remove illegal characters
+gbif_subset_1 <- gbif_subset_1 %>% 
+  rename_all(function(x){paste0(x, "_gbif")})
+
+# Read into R occurrence data from GBIF
+gbif_subset_2 <- read_tsv("0052902-200221144449610/occurrence.txt", 
+                     na = character(),
+                     col_types = cols())
+
+# Rename columns to reflect provenance and remove illegal characters
+gbif_subset_2 <- gbif_subset_2 %>% 
+  rename_all(function(x){paste0(x, "_gbif")})
+
+# Bind `gbif_1` and `gbif_2` together
+gbif_subset <- bind_rows(list(gbif_subset_1, gbif_subset_2), .id = "id") %>% 
+  unite(matchDuplicates2, 
+          c("institutionCode_gbif", 
+            "collectionCode_gbif", 
+            "catalogNumber_gbif"), 
+          sep = " ", 
+          remove = FALSE) %>% 
+  mutate(matchDuplicates2 = str_squish(tolower(matchDuplicates2))) %>%
+  group_by(matchDuplicates2) %>% 
+  filter() %>% 
+  mutate(matchDuplicates = case_when(row_number() != 1 
+                                     ~ paste("PLACEHOLDER_GBIF_", 
+                                           matchDuplicates2,
+                                           sep = ""),
+                                     row_number() == 1 ~ matchDuplicates2)) %>%
+  ungroup() %>% 
+  mutate(matchDuplicates = make.unique(matchDuplicates))
+
+# Join `idb_subset` and `gbif_subset` based on unique combinations of intitution
+# code, collection code, and catalog number
+records <- gbif_subset %>% 
+  full_join(idb_subset, by = "matchDuplicates") %>% 
+  mutate(idigbio = case_when(!is.na(idigbio_uuid_idbP) ~ "yes")) %>% 
+  mutate(gbif = case_when(!is.na(gbifID_gbif) ~ "yes")) %>% 
+  select(gbif, idigbio, gbifID_gbif, idigbio_uuid_idbP, 
+         sort(tidyselect::peek_vars()),
+         -starts_with("matchDuplicates"))
+
+# Subset records that overlap between iDigBio and GBIF for visualizing data
+records_overlap <- records %>% 
+  filter(gbif == "yes" & idigbio == "yes")
+
+# Count records that have already been georeferenced 
+records_georef <- records %>% 
+  filter(idigbio_geoPoint_idbP != "" | 
+         (!is.na(decimalLatitude_gbif) & !is.na(decimalLongitude_gbif))) %>% 
+  nrow()
+
+# Count distinct localities that have already been georeferenced 
+localities_georef <- records %>% 
+  filter(idigbio_geoPoint_idbP != "" | 
+         (!is.na(decimalLatitude_gbif) & !is.na(decimalLongitude_gbif))) %>% 
+  unite(locality,
+        c("locality_gbif", "locality_idbR", "locality_idbP"),
+        sep = " | ") %>% 
+  count(locality) %>% 
+  arrange(desc(n))
+
+# Subset records that could be georeferenced, as indicated by a lack of 
+# existing georeference and a value in the locality field
+records_locality <- records %>% 
+  filter((idigbio_geoPoint_idbP == "" | is.na(idigbio_geoPoint_idbP)) & 
+         (is.na(decimalLatitude_gbif) & is.na(decimalLongitude_gbif))) %>% 
+  filter((!is.na(locality_gbif) & locality_gbif != "" ) |
+         (!is.na(locality_idbR) & locality_idbR != "" ) |
+         (!is.na(locality_idbP) & locality_idbP != "" ) |
+         (!is.na(verbatimLocality_gbif) & verbatimLocality_gbif != "" ) |
+         (!is.na(verbatimLocality_idbR) & verbatimLocality_idbR != ""))
+
+# Count distinct localities that have not yet been georeferenced 
+localities_locality <- records_locality %>% 
+  unite(locality,
+        c("locality_gbif", "locality_idbR", "locality_idbP"),
+        sep = " | ") %>% 
+  count(locality) %>% 
+  arrange(desc(n))
+
+# Count distinct data providers of total records
+providers_total <- records %>% 
+  mutate(institutionCode = coalesce(institutionCode_gbif, 
+                                    institutionCode_idbR, 
+                                    institutionCode_idbP)) %>% 
+  count(institutionCode) %>% 
+  arrange(desc(n)) %>% 
+  rename(records = n) %>% 
+  mutate(percentRecords = round(records/(sum(records))*100, 1))
+
+# Count distinct data providers of ungeoreferenced records
+providers_ungeoreferenced <- records_locality %>% 
+  mutate(institutionCode = coalesce(institutionCode_gbif, 
+                                    institutionCode_idbR, 
+                                    institutionCode_idbP)) %>% 
+  count(institutionCode) %>% 
+  arrange(desc(n)) %>% 
+  rename(records = n) %>% 
+  mutate(percentRecords = round(records/(sum(records))*100, 1))
+
+# Count distinct countries represented in total records
+countries_total <- records %>% 
+  mutate(country = coalesce(country_idbP,
+                            countryCode_gbif,
+                            country_idbR)) %>% 
+  count(country) %>% 
+  arrange(desc(n)) %>% 
+  rename(records = n) %>% 
+  mutate(percentRecords = round(records/(sum(records))*100, 1))
+  
+# Count distinct countries represented in ungeoreferenced records
+countries_ungeoreferenced <- records_locality %>% 
+  mutate(country = coalesce(country_idbP,
+                            countryCode_gbif,
+                            country_idbR)) %>% 
+  count(country) %>% 
+  arrange(desc(n)) %>% 
+  rename(records = n) %>% 
+  mutate(percentRecords = round(records/(sum(records))*100, 1))
+
+# Count distinct species represented in total records
+species_total <- records %>% 
+  mutate(species = coalesce(scientificName_gbif,
+                            scientificName_idbP,
+                            scientificName_idbR)) %>% 
+  mutate(species = tolower(species)) %>% 
+  mutate(family = coalesce(family_gbif,
+                           family_idbP,
+                           family_idbR)) %>% 
+  mutate(family = toupper(family)) %>% 
+  group_by(family, species) %>% 
+  count(species) %>% 
+  rename(records = n) %>% 
+  ungroup() %>% 
+  mutate(percentRecords = round(records/(sum(records))*100, 1))
+  
+# Count distinct species represented in ungeoreferenced records
+species_ungeoreferenced <- records_locality %>% 
+  mutate(species = coalesce(scientificName_gbif,
+                            scientificName_idbP,
+                            scientificName_idbR)) %>% 
+  mutate(species = tolower(species)) %>% 
+  mutate(family = coalesce(family_gbif,
+                           family_idbP,
+                           family_idbR)) %>% 
+  mutate(family = toupper(family)) %>% 
+  group_by(family, species) %>% 
+  count(species) %>% 
+  rename(records = n) %>% 
+  ungroup() %>% 
+  mutate(percentRecords = round(records/(sum(records))*100, 1))
+
+# Read into R data from batnames resource
+batnames_hipposideridae <- read_csv("Hipposideridae2020-04-28.csv", 
+                    na = character(),
+                    col_types = cols())
+
+# Combine batnames columns for matching
+batnames_hipposideridae <- batnames_hipposideridae %>% 
+  unite(match,
+        c("Genus", "Species"),
+        sep = " ",
+        remove = FALSE) %>% 
+  mutate(match = tolower(match)) %>% 
+  unite(matchAuthor,
+        c("Genus", "Species", "Author"),
+        sep = " ",
+        remove = FALSE) %>% 
+  mutate(matchAuthor = tolower(matchAuthor)) %>% 
+  unite(matchFullAuthor,
+        c("matchAuthor", "Date"),
+        sep = ", ",
+        remove = FALSE) %>% 
+  mutate(matchFullAuthor = tolower(matchFullAuthor))
+
+# Read into R data from batnames resource
+batnames_rhinonolophidae <- read_csv("Rhinolophidae2020-04-28.csv", 
+                    na = character(),
+                    col_types = cols())
+
+# Combine batnames columns for matching
+batnames_rhinonolophidae <- batnames_rhinonolophidae %>% 
+  unite(match,
+        c("Genus", "Species"),
+        sep = " ",
+        remove = FALSE) %>% 
+  mutate(match = tolower(match)) %>% 
+  unite(matchAuthor,
+        c("Genus", "Species", "Author"),
+        sep = " ",
+        remove = FALSE) %>% 
+  mutate(matchAuthor = tolower(matchAuthor)) %>% 
+  unite(matchFullAuthor,
+        c("matchAuthor", "Date"),
+        sep = ", ",
+        remove = FALSE) %>% 
+  mutate(matchFullAuthor = tolower(matchFullAuthor))
+
+# Read into R data from batnames resource
+batnames_rhinonycterideridae <- read_csv("Rhinonycteridae2020-04-28.csv", 
+                    na = character(),
+                    col_types = cols())
+
+# Combine batnames columns for matching
+batnames_rhinonycterideridae <- batnames_rhinonycterideridae %>% 
+  unite(match,
+        c("Genus", "Species"),
+        sep = " ",
+        remove = FALSE) %>% 
+  mutate(match = tolower(match)) %>% 
+  unite(matchAuthor,
+        c("Genus", "Species", "Author"),
+        sep = " ",
+        remove = FALSE) %>% 
+  mutate(matchAuthor = tolower(matchAuthor)) %>% 
+  unite(matchFullAuthor,
+        c("matchAuthor", "Date"),
+        sep = ", ",
+        remove = FALSE) %>% 
+  mutate(matchFullAuthor = tolower(matchFullAuthor))
+
+# Bind all batnames datasets into a single data frame
+batnames <- bind_rows(batnames_hipposideridae,
+                      batnames_rhinonolophidae,
+                      batnames_rhinonycterideridae)
+
+# Check to see which species have matching names in Batnames data
+species_total <- species_total %>% 
+  left_join(select(batnames, Family, match), 
+            by = c("species" = "match")) %>% 
+  left_join(select(batnames, Family, matchAuthor), 
+            by = c("species" = "matchAuthor")) %>% 
+  left_join(select(batnames, Family, matchFullAuthor), 
+            by = c("species" = "matchFullAuthor")) %>% 
+  mutate(familyBatnames = coalesce(Family, Family.x, Family.y)) %>% 
+  mutate(familyBatnames = toupper(familyBatnames)) %>% 
+  select(family, familyBatnames, species, records, percentRecords)
+
+# Check to see which species have matching names in Batnames data
+species_ungeoreferenced <- species_ungeoreferenced %>% 
+  left_join(select(batnames, Family, match), 
+            by = c("species" = "match")) %>% 
+  left_join(select(batnames, Family, matchAuthor), 
+            by = c("species" = "matchAuthor")) %>% 
+  left_join(select(batnames, Family, matchFullAuthor), 
+            by = c("species" = "matchFullAuthor")) %>% 
+  mutate(familyBatnames = coalesce(Family, Family.x, Family.y)) %>% 
+  mutate(familyBatnames = toupper(familyBatnames)) %>% 
+  select(family, familyBatnames, species, records, percentRecords)
+
+# Calculate percent names valid according to Batnames
+records_total_batnames <- species_total %>% 
+  filter(!is.na(familyBatnames)) %>% 
+  summarize(valid = sum(records)) %>% 
+  as.integer()
+
+# Calculate percent names valid according to Batnames
+records_ungeoreferenced_batnames <- species_ungeoreferenced %>% 
+  filter(!is.na(familyBatnames)) %>% 
+  summarize(valid = sum(records)) %>% 
+  as.integer()
+
+# Count records that have a value in the habitat field
+records_habitat <- records %>% 
+  filter(habitat_gbif != "" | 
+         habitat_idbR != "" ) %>% 
+  nrow()
+
+# Count records that have a value in the preparations field
+records_prep <- records %>% 
+  filter(preparations_gbif != "" | 
+         preparations_idbR != "" ) %>% 
+  nrow()
+
+# Count records that have a value in the habitat field
+records_seq <- records %>% 
+  filter(associatedSequences_gbif != "" | 
+         associatedSequences_idbR != "" ) %>% 
+  nrow()
+```
+----------
+
+_**How many specimen records exist?**_
+
+----------
+
+- iDigBio = `r format(nrow(idb_subset), big.mark = ",")`
+- GBIF = `r format(nrow(gbif_subset), big.mark = ",")`
+- Aggregators combined, accounting for obvious duplicates = `r format(nrow(records), big.mark = ",")`
+
+_Example of records that exist on both iDigBio and GBIF and have been merged here_
+
+```{r echo = FALSE}
+knitr::kable(head(records_overlap)) %>% 
+    kable_styling(bootstrap_options = 
+                         c("striped", "hover", "condensed", "responsive")) %>% 
+  scroll_box(width = "100%", height = "200px")
+```
+
+&nbsp;
+
+_`r nrow(as_tibble(colnames(records)))` fields present in the aggregator combined data_
+
+```{r echo = FALSE}
+as_tibble(colnames(records)) %>% 
+knitr::kable() %>% 
+    kable_styling(bootstrap_options = 
+                         c("striped", "hover", "condensed", "responsive")) %>% 
+  scroll_box(width = "50%", height = "400px")
+```
+
+&nbsp;
+
+```{r echo = FALSE}
+col <- as_tibble(colnames(records)) %>% 
+  nrow()
+col_gbif <- as_tibble(colnames(records)) %>% 
+  filter(grepl("_gbif", value)) %>% 
+  nrow()
+col_idbR <- as_tibble(colnames(records)) %>% 
+  filter(grepl("_idbR", value)) %>% 
+  nrow()
+col_idbP <- as_tibble(colnames(records)) %>% 
+  filter(grepl("_idbP", value)) %>% 
+  nrow()
+```
+
+_Origin of the fields present in the aggregator combined data:_
+
+- `r round(sum(col_gbif/col*100), 1)`% from GBIF compiled data
+- `r round(sum(col_idbR/col*100), 1)`% from iDigBio raw data
+- `r round(sum(col_idbP/col*100), 1)`% from iDigBio processed
+
+----------
+
+_**How many of these records are already georeferenced?**_
+
+----------
+
+- Aggregators combined, accounting for obvious duplicates = `r format(records_georef, big.mark = ",")`
+- Distinct localities represented by these records = `r nrow(localities_georef)`
+
+----------
+
+_**Of those records that are not already georeferenced, how many have something in the locality field?**_
+
+----------
+
+- Aggregators combined, accounting for obvious duplicates = `r format(nrow(records_locality), big.mark = ",")`
+- Distinct localities represented by these records = `r nrow(localities_locality)`
+
+----------
+
+_**How many distinct collections are providing these specimen records?**_
+
+----------
+
+_`r nrow(providers_total)` data providers based on total number of records_
+
+```{r echo = FALSE}
+knitr::kable(providers_total) %>% 
+    kable_styling(bootstrap_options = 
+                         c("striped", "hover", "condensed", "responsive")) %>% 
+  scroll_box(width = "100%", height = "200px")
+```
+
+&nbsp;
+
+_`r nrow(providers_ungeoreferenced)` data providers based on number of records needing to be georeferenced_
+
+```{r echo = FALSE}
+knitr::kable(providers_ungeoreferenced) %>% 
+    kable_styling(bootstrap_options = 
+                         c("striped", "hover", "condensed", "responsive")) %>% 
+  scroll_box(width = "100%", height = "200px")
+```
+
+----------
+
+_**What is the geographic scope represented in these records, measured by country of collection?**_
+
+----------
+
+_`r nrow(countries_total)` values for country present in total number of records_
+
+```{r echo = FALSE}
+knitr::kable(countries_total) %>% 
+    kable_styling(bootstrap_options = 
+                         c("striped", "hover", "condensed", "responsive")) %>% 
+  scroll_box(width = "100%", height = "200px")
+```
+
+&nbsp;
+
+_`r nrow(countries_ungeoreferenced)` values for country present in records needing to be georeferenced_
+
+```{r echo = FALSE}
+knitr::kable(countries_ungeoreferenced) %>% 
+    kable_styling(bootstrap_options = 
+                         c("striped", "hover", "condensed", "responsive")) %>% 
+  scroll_box(width = "100%", height = "200px")
+```
+
+----------
+
+_**What is the temporal scope represented in these records, measured by year of collection?**_
+
+----------
+
+TBD
+
+----------
+
+_**What is the taxonomic scope represented in these records, measured by distinct species?**_
+
+----------
+
+_`r nrow(species_total)` values for species present in total number of records, `r format(round(sum(records_total_batnames/nrow(records)*100), 1), big.mark = ",")`% valid according to Batnames_
+
+```{r echo = FALSE}
+knitr::kable(species_total) %>% 
+    kable_styling(bootstrap_options = 
+                         c("striped", "hover", "condensed", "responsive")) %>% 
+  scroll_box(width = "100%", height = "400px")
+```
+
+&nbsp;
+
+_`r nrow(species_ungeoreferenced)` values for species present in records needing to be georeferenced, `r format(round(sum(records_ungeoreferenced_batnames/nrow(records_locality)*100), 1), big.mark = ",")`% valid according to Batnames_
+
+```{r echo = FALSE}
+knitr::kable(species_ungeoreferenced) %>% 
+    kable_styling(bootstrap_options = 
+                         c("striped", "hover", "condensed", "responsive")) %>% 
+  scroll_box(width = "100%", height = "400px")
+```
+
+----------
+
+_**What kind of ancillary locality information is represented in these records, measured by presence of values in the habitat field?**_
+
+----------
+
+- Total number of records with values in the habitat field = `r records_habitat` (`r round(sum(records_habitat/nrow(records)*100), 1)`%)
+
+----------
+
+_**What kind of ancillary locality information is represented in these records, measured by presence of values in the preparations and associatedSequences fields?**_
+
+----------
+
+- Total number of records with values in the preparations field = `r records_prep` (`r round(sum(records_prep/nrow(records)*100), 1)`%)
+- Total number of records with values in the associatedSequences field = `r records_seq` (`r round(sum(records_seq/nrow(records)*100), 1)`%)
